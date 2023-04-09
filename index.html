@@ -33,13 +33,78 @@
         const materialStatic = new THREE.MeshPhongMaterial({ color: 0x999999 });
         const clock = new THREE.Clock();
 
-        function makeTrack(material) {
-            createRigidObject(new THREE.Vector3(0, 0, 0), ZERO_QUATERNION, { height: 20, radius: 25, material }, 0, 2);
-            createRigidObject(new THREE.Vector3(0, 0, 20), ZERO_QUATERNION, { height: 40, width: 50, length: 20, material }, 0, 2, true);
-            createRigidObject(new THREE.Vector3(0, 0, 40), ZERO_QUATERNION, { height: 20, radius: 25, material }, 0, 2);
-            createRigidObject(new THREE.Vector3(0, 10, 0), ZERO_QUATERNION, { height: 10, radius: 13 }, 0, 2, false, 0xff0000);
-            createRigidObject(new THREE.Vector3(0, 10, 20), ZERO_QUATERNION, { height: 40, width: 26, length: 10 }, 0, 2, true, 0xff0000);
-            createRigidObject(new THREE.Vector3(0, 10, 40), ZERO_QUATERNION, { height: 10, radius: 13 }, 0, 2, false, 0xff0000);
+        function makeTrack(material, brickMaterial) {
+            createRigidObject(new THREE.Vector3(0, 0, 0), ZERO_QUATERNION, { height: 20, radius: 25, material: [new THREE.MeshPhongMaterial({ color: 0xfca400 }), material, new THREE.MeshPhongMaterial({ color: 0xfca400 })] }, 0, 2);
+            createRigidObject(
+                new THREE.Vector3(0, 0, 20),
+                ZERO_QUATERNION,
+                {
+                    height: 40,
+                    width: 50,
+                    length: 20,
+                    material: [
+                        new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+                        new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+                        material,
+                        new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+                        new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+                        new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+                        new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+                    ]
+                }, 0, 2, true);
+
+
+            createRigidObject(
+                new THREE.Vector3(0, 0, 40),
+                ZERO_QUATERNION,
+                {
+                    height: 20,
+                    radius: 25,
+                    material: [
+                        new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+                        material,
+                        new THREE.MeshPhongMaterial({ color: 0xfca400 })
+                    ]
+                }, 0, 2);
+
+
+            createRigidObject(
+                new THREE.Vector3(0, 10, 0),
+                ZERO_QUATERNION,
+                {
+                    height: 10,
+                    radius: 13,
+                    material: [
+                        brickMaterial,
+                        brickMaterial
+                    ]
+                }, 0, 2, false, 0xff0000);
+
+            createRigidObject(
+                new THREE.Vector3(0, 10, 20),
+                ZERO_QUATERNION,
+                {
+                    height: 40,
+                    width: 26,
+                    length: 10,
+                    material: [
+                        brickMaterial,
+                        brickMaterial,
+                        brickMaterial,
+                    ]
+                }, 0, 2, true, 0xff0000);
+
+            createRigidObject(
+                new THREE.Vector3(0, 10, 40),
+                ZERO_QUATERNION,
+                {
+                    height: 10,
+                    radius: 13,
+                    material: [
+                        brickMaterial,
+                        brickMaterial
+                    ]
+                }, 0, 2, false, 0xff0000);
         }
 
         function generateHeight(width, depth, minHeight, maxHeight) {
@@ -214,24 +279,21 @@
             );
 
 
-            loader.load(
-                'https://t4.ftcdn.net/jpg/02/86/45/25/360_F_286452528_dnDH3uUUQUGQ7EsxZ9Ky1YXsH1kPVj4y.jpg',
-                function (texture) {
-                    texture.wrapS = THREE.RepeatWrapping;
-                    texture.wrapT = THREE.RepeatWrapping;
-                    texture.repeat.set(4, 4);
-                    const material = new THREE.MeshPhongMaterial({side: THREE.DoubleSide, map: texture });
+            const roadTexture = loader.load("https://t4.ftcdn.net/jpg/02/86/45/25/360_F_286452528_dnDH3uUUQUGQ7EsxZ9Ky1YXsH1kPVj4y.jpg");
+            const brickTexture = loader.load("https://i.imgur.com/7rTGpUi.jpeg");
+            roadTexture.wrapS = THREE.RepeatWrapping;
+            roadTexture.wrapT = THREE.RepeatWrapping;
+            roadTexture.repeat.set(4, 4);
 
-                    scene.add(
-                        makeTrack(material)
-                    );
 
-                },
-                undefined,
-                function (err) {
-                    console.log(err);
-                    console.error('An error happened.');
-                }
+            brickTexture.wrapS = THREE.RepeatWrapping;
+            brickTexture.wrapT = THREE.RepeatWrapping;
+            brickTexture.repeat.set(10, 4);
+
+            const material = new THREE.MeshPhongMaterial({ side: THREE.DoubleSide, map: roadTexture });
+            const brickMaterial = new THREE.MeshPhongMaterial({ side: THREE.DoubleSide, map: brickTexture });
+            scene.add(
+                makeTrack(material, brickMaterial)
             );
 
 
