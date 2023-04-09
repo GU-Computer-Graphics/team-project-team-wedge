@@ -33,6 +33,77 @@
         const materialStatic = new THREE.MeshPhongMaterial({ color: 0x999999 });
         const clock = new THREE.Clock();
 
+
+        function createChassis(params) {
+            const shape = new THREE.BoxGeometry(params.width, params.height, params.length, 1, 1, 1);
+            const mesh = new THREE.Mesh(shape, new THREE.MeshPhongMaterial({ color: 0xff0000 }));
+            scene.add(mesh);
+            return mesh;
+        }
+
+        function createWheel(params) {
+            const wheelGeom = new THREE.CylinderGeometry(params.radius, params.radius, params.height, 50, 1);
+            const wheelMesh = new THREE.Mesh(wheelGeom, new THREE.MeshPhongMaterial({ color: 0x000000 }));
+
+            wheelMesh.rotation.x = Math.PI / 2;
+            wheelMesh.rotation.z = Math.PI / 2;
+            scene.add(wheelMesh);
+            return wheelMesh;
+        }
+
+        function createVehicle() {
+            const position = {
+                x: 0,
+                y: 12.5,
+                z: -20
+            }
+            const chassisParams = {
+                height: 3,
+                width: 5,
+                length: 8
+            };
+
+            const wheelParams = {
+                radius: 1,
+                height: 1
+            };
+            const chassisMesh = createChassis(chassisParams);
+
+
+            const wheel1 = createWheel(wheelParams);
+            const wheel2 = createWheel(wheelParams);
+            const wheel3 = createWheel(wheelParams);
+            const wheel4 = createWheel(wheelParams);
+
+            chassisMesh.position.set(position.x, position.y, position.z);
+            wheel1.position.set(
+                0 + chassisParams.width / 2 + wheelParams.height / 2,
+                position.y - chassisParams.height / 2,
+                -20 - 1 + chassisParams.length / 2
+            );
+
+            wheel2.position.set(
+                0 + chassisParams.width / 2 + wheelParams.height / 2,
+                position.y - chassisParams.height / 2,
+                -20 + 1 - chassisParams.length / 2
+            );
+
+
+            wheel3.position.set(
+                0 - chassisParams.width / 2 - wheelParams.height / 2,
+                position.y - chassisParams.height / 2,
+                -20 + 1 - chassisParams.length / 2
+            );
+
+            wheel4.position.set(
+                0 - chassisParams.width / 2 - wheelParams.height / 2,
+                position.y - chassisParams.height / 2,
+                -20 - 1 + chassisParams.length / 2
+            );
+
+
+            return chassisMesh;
+        }
         function makeTrack(material, brickMaterial) {
             createRigidObject(new THREE.Vector3(0, 0, 0), ZERO_QUATERNION, { height: 20, radius: 25, material: [new THREE.MeshPhongMaterial({ color: 0xfca400 }), material, new THREE.MeshPhongMaterial({ color: 0xfca400 })] }, 0, 2);
             createRigidObject(
@@ -74,10 +145,11 @@
                 {
                     height: 10,
                     radius: 13,
-                    material: [
-                        brickMaterial,
-                        brickMaterial
-                    ]
+                    material: new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+                    // [
+                    //     brickMaterial,
+                    //     brickMaterial
+                    // ]
                 }, 0, 2, false, 0xff0000);
 
             createRigidObject(
@@ -87,11 +159,12 @@
                     height: 40,
                     width: 26,
                     length: 10,
-                    material: [
-                        brickMaterial,
-                        brickMaterial,
-                        brickMaterial,
-                    ]
+                    material: new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+                    // [
+                    //     brickMaterial,
+                    //     brickMaterial,
+                    //     brickMaterial,
+                    // ]
                 }, 0, 2, true, 0xff0000);
 
             createRigidObject(
@@ -100,10 +173,11 @@
                 {
                     height: 10,
                     radius: 13,
-                    material: [
-                        brickMaterial,
-                        brickMaterial
-                    ]
+                    material: new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+                    // [
+                    //     brickMaterial,
+                    //     brickMaterial
+                    // ]
                 }, 0, 2, false, 0xff0000);
         }
 
@@ -295,6 +369,8 @@
             scene.add(
                 makeTrack(material, brickMaterial)
             );
+
+            scene.add(createVehicle());
 
 
             update();
