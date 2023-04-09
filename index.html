@@ -31,9 +31,50 @@
         const dynamicObjects = [];
         const materialDynamic = new THREE.MeshPhongMaterial({ color: 0xfca400 });
         const materialStatic = new THREE.MeshPhongMaterial({ color: 0x999999 });
-        var clock = new THREE.Clock();
+        const clock = new THREE.Clock();
 
-        function createRigidObject(pos, quat, params, mass, friction, isBox = false, color = 0xffffff) {
+
+        function generateHeight(width, depth, minHeight, maxHeight) {
+            const size = width * depth;
+            const data = new Float32Array(size);
+
+            const hRange = maxHeight - minHeight;
+            const w2 = width / 2;
+            const d2 = depth / 2;
+            const phaseMult = 12;
+
+            let index = 0;
+            for (var j = 0; j < depth; j++) {
+                for (var i = 0; i < width; i++) {
+
+                    const radius = Math.sqrt(
+                        Math.pow((i - w2) / w2, 2.0) +
+                        Math.pow((j - d2) / d2, 2.0));
+
+                    data[index] = Math.sin(radius*10);
+
+                    index++;
+                }
+            }
+            return data;
+        }
+
+        function makeTerrain() {
+            var geometry = new THREE.PlaneBufferGeometry(100, 100, 100 - 1, 100 - 1);
+            geometry.rotateX(- Math.PI / 2);
+            var vertices = geometry.attributes.position.array;
+            const heightData = generateHeight(100, 100, 100, 100);
+            for (var i = 0, j = 0, l = vertices.length; i < l; i++, j += 3) {
+                vertices[j + 1] = heightData[i];
+            }
+            var groundMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00, side: THREE.DoubleSide });
+            terrainMesh = new THREE.Mesh(geometry, groundMaterial);
+            terrainMesh.position.set(0, 8, 20);
+
+            return terrainMesh;
+        }
+
+        function createRigidObject(pos, quat, params, mass, friction, isBox = false, color = 0x919691) {
             const material = mass > 0 ? materialDynamic : materialStatic;
             let shape, geometry;
             if (isBox) {
@@ -129,27 +170,32 @@
             const controls = new THREE.OrbitControls(camera);
             controls.update(0.1);
 
-            const ambientLight = new THREE.AmbientLight(0x704040);
+            const ambientLight = new THREE.AmbientLight(0xa04040);
             scene.add(ambientLight);
+            scene.add(makeTerrain());
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+            dirLight.position.set(10, 10, 5);
+            scene.add(dirLight);
 
             renderer = new THREE.WebGLRenderer();
             renderer.setClearColor(0xbfd1e5);
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
-            
+
             renderer.render(scene, camera);
 
             container.appendChild(renderer.domElement);
 
             const ZERO_QUATERNION = new THREE.Quaternion(0, 0, 0, 1);
-            createRigidObject(new THREE.Vector3(0, 0, 0), ZERO_QUATERNION, {height: 20, radius: 21}, 0, 2);
-            createRigidObject(new THREE.Vector3(0, 0, 20), ZERO_QUATERNION, {height: 40, width: 42, length: 20}, 0, 2, true);
-            createRigidObject(new THREE.Vector3(0, 0, 40), ZERO_QUATERNION, {height: 20, radius: 21}, 0, 2);
-            
-            
-            createRigidObject(new THREE.Vector3(0, 10, 0), ZERO_QUATERNION, {height: 10, radius: 13}, 0, 2, false, 0xff0000);
-            createRigidObject(new THREE.Vector3(0, 10, 20), ZERO_QUATERNION, {height: 40, width: 26, length: 10}, 0, 2, true, 0xff0000);
-            createRigidObject(new THREE.Vector3(0, 10, 40), ZERO_QUATERNION, {height: 10, radius: 13}, 0, 2, false, 0xff0000);
+            createRigidObject(new THREE.Vector3(0, 0, 0), ZERO_QUATERNION, { height: 20, radius: 21 }, 0, 2);
+            createRigidObject(new THREE.Vector3(0, 0, 20), ZERO_QUATERNION, { height: 40, width: 42, length: 20 }, 0, 2, true);
+            createRigidObject(new THREE.Vector3(0, 0, 40), ZERO_QUATERNION, { height: 20, radius: 21 }, 0, 2);
+
+
+            createRigidObject(new THREE.Vector3(0, 10, 0), ZERO_QUATERNION, { height: 10, radius: 13 }, 0, 2, false, 0xff0000);
+            createRigidObject(new THREE.Vector3(0, 10, 20), ZERO_QUATERNION, { height: 40, width: 26, length: 10 }, 0, 2, true, 0xff0000);
+            createRigidObject(new THREE.Vector3(0, 10, 40), ZERO_QUATERNION, { height: 10, radius: 13 }, 0, 2, false, 0xff0000);
 
 
             update();
