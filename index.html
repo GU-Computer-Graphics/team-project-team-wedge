@@ -27,12 +27,20 @@
         const container = document.getElementById("container");
         const syncList = [];
         let transformAux1;
-
+        const ZERO_QUATERNION = new THREE.Quaternion(0, 0, 0, 1);
         const dynamicObjects = [];
         const materialDynamic = new THREE.MeshPhongMaterial({ color: 0xfca400 });
         const materialStatic = new THREE.MeshPhongMaterial({ color: 0x999999 });
         const clock = new THREE.Clock();
 
+        function makeTrack(material) {
+            createRigidObject(new THREE.Vector3(0, 0, 0), ZERO_QUATERNION, { height: 20, radius: 25, material }, 0, 2);
+            createRigidObject(new THREE.Vector3(0, 0, 20), ZERO_QUATERNION, { height: 40, width: 50, length: 20, material }, 0, 2, true);
+            createRigidObject(new THREE.Vector3(0, 0, 40), ZERO_QUATERNION, { height: 20, radius: 25, material }, 0, 2);
+            createRigidObject(new THREE.Vector3(0, 10, 0), ZERO_QUATERNION, { height: 10, radius: 13 }, 0, 2, false, 0xff0000);
+            createRigidObject(new THREE.Vector3(0, 10, 20), ZERO_QUATERNION, { height: 40, width: 26, length: 10 }, 0, 2, true, 0xff0000);
+            createRigidObject(new THREE.Vector3(0, 10, 40), ZERO_QUATERNION, { height: 10, radius: 13 }, 0, 2, false, 0xff0000);
+        }
 
         function generateHeight(width, depth, minHeight, maxHeight) {
             const size = width * depth;
@@ -51,7 +59,7 @@
                         Math.pow((i - w2) / w2, 2.0) +
                         Math.pow((j - d2) / d2, 2.0));
 
-                    data[index] = Math.sin(radius*10);
+                    data[index] = Math.sin(radius * 10);
 
                     index++;
                 }
@@ -59,7 +67,7 @@
             return data;
         }
 
-        function makeTerrain() {
+        function makeTerrain(material) {
             var geometry = new THREE.PlaneBufferGeometry(100, 100, 100 - 1, 100 - 1);
             geometry.rotateX(- Math.PI / 2);
             var vertices = geometry.attributes.position.array;
@@ -68,7 +76,7 @@
                 vertices[j + 1] = heightData[i];
             }
             var groundMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00, side: THREE.DoubleSide });
-            terrainMesh = new THREE.Mesh(geometry, groundMaterial);
+            terrainMesh = new THREE.Mesh(geometry, material);
             terrainMesh.position.set(0, 8, 20);
 
             return terrainMesh;
@@ -92,7 +100,7 @@
             if (!mass) mass = 0;
             if (!friction) friction = 1;
 
-            const mesh = new THREE.Mesh(shape, new THREE.MeshPhongMaterial({ color }));
+            const mesh = new THREE.Mesh(shape, params.material ? params.material : new THREE.MeshPhongMaterial({ color }));
             mesh.position.copy(pos);
             mesh.quaternion.copy(quat);
             scene.add(mesh);
@@ -170,9 +178,8 @@
             const controls = new THREE.OrbitControls(camera);
             controls.update(0.1);
 
-            const ambientLight = new THREE.AmbientLight(0xa04040);
+            const ambientLight = new THREE.AmbientLight(0x204040);
             scene.add(ambientLight);
-            scene.add(makeTerrain());
 
             const dirLight = new THREE.DirectionalLight(0xffffff, 1);
             dirLight.position.set(10, 10, 5);
@@ -187,15 +194,45 @@
 
             container.appendChild(renderer.domElement);
 
-            const ZERO_QUATERNION = new THREE.Quaternion(0, 0, 0, 1);
-            createRigidObject(new THREE.Vector3(0, 0, 0), ZERO_QUATERNION, { height: 20, radius: 21 }, 0, 2);
-            createRigidObject(new THREE.Vector3(0, 0, 20), ZERO_QUATERNION, { height: 40, width: 42, length: 20 }, 0, 2, true);
-            createRigidObject(new THREE.Vector3(0, 0, 40), ZERO_QUATERNION, { height: 20, radius: 21 }, 0, 2);
+            const loader = new THREE.TextureLoader();
+
+            loader.load(
+                'https://i.imgur.com/7PbdSdY.jpg',
+                function (texture) {
+                    texture.wrapS = THREE.RepeatWrapping;
+                    texture.wrapT = THREE.RepeatWrapping;
+                    texture.repeat.set(4, 4);
+                    const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, side: THREE.DoubleSide, map: texture });
+
+                    scene.add(makeTerrain(material));
+
+                },
+                undefined,
+                function (err) {
+                    console.error('An error happened.');
+                }
+            );
 
 
-            createRigidObject(new THREE.Vector3(0, 10, 0), ZERO_QUATERNION, { height: 10, radius: 13 }, 0, 2, false, 0xff0000);
-            createRigidObject(new THREE.Vector3(0, 10, 20), ZERO_QUATERNION, { height: 40, width: 26, length: 10 }, 0, 2, true, 0xff0000);
-            createRigidObject(new THREE.Vector3(0, 10, 40), ZERO_QUATERNION, { height: 10, radius: 13 }, 0, 2, false, 0xff0000);
+            loader.load(
+                'https://t4.ftcdn.net/jpg/02/86/45/25/360_F_286452528_dnDH3uUUQUGQ7EsxZ9Ky1YXsH1kPVj4y.jpg',
+                function (texture) {
+                    texture.wrapS = THREE.RepeatWrapping;
+                    texture.wrapT = THREE.RepeatWrapping;
+                    texture.repeat.set(4, 4);
+                    const material = new THREE.MeshPhongMaterial({side: THREE.DoubleSide, map: texture });
+
+                    scene.add(
+                        makeTrack(material)
+                    );
+
+                },
+                undefined,
+                function (err) {
+                    console.log(err);
+                    console.error('An error happened.');
+                }
+            );
 
 
             update();
