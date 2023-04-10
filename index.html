@@ -164,9 +164,13 @@
             wheelMeshes.push(wheel1, wheel4, wheel3, wheel2);
 
             let vehicleSteering = 0;
+            // const lookAtObj = new THREE.Object();
+            // scene.add(lookAtObj);
 
             syncList.push(function () {
-
+                if (window.shouldUpdate === false) {
+                    return;
+                }
                 const speed = vehicle.getCurrentSpeedKmHour();
                 let force = 0;
                 let breakingForce = 0;
@@ -177,7 +181,7 @@
 
                 if (keyState.s) {
                     if (speed < 0) {
-                        force = -1000 / 2;
+                        force = -1000;
                     } else {
                         breakingForce = 100;
                     }
@@ -218,8 +222,55 @@
                 const vehicleTransform = vehicle.getChassisWorldTransform();
                 const position = vehicleTransform.getOrigin();
                 const rotation = vehicleTransform.getRotation();
+
+
+                let quaternion = new THREE.Quaternion(rotation.x(), rotation.y(), rotation.z(), rotation.w());
+                const degrees = new THREE.Euler().setFromQuaternion(quaternion);
+
+                const pos = new THREE.Vector3(position.x(), position.y(), position.z());
+                pos.applyQuaternion(quaternion);
+
+
+                // console.log(degrees.y, degrees.x);
+                // if (Math.abs(degrees.x) < 3) {
+                //     camera.position.set(
+                //         position.x() + Math.abs(Math.sin(degrees.y) * 3),
+                //         position.y(),
+                //         position.z() + Math.abs(Math.cos(degrees.y) * 3)
+                //     );
+                // } else {
+                //     camera.position.set(
+                //         position.x() + Math.abs(Math.sin(degrees.y + Math.PI / 2) * 3),
+                //         position.y(),
+                //         position.z() + Math.abs(Math.cos(degrees.y + Math.PI / 2) * 3)
+                //     );
+                // }
+
+
+
+                camera.position.set(
+                    position.x() + 10, 
+                    position.y() + 10, 
+                    position.z()
+                );
+
+                camera.lookAt(
+                    position.x(),
+                    position.y(),
+                    position.z()
+                );
+
                 chassisMesh.position.set(position.x(), position.y(), position.z());
                 chassisMesh.quaternion.set(rotation.x(), rotation.y(), rotation.z(), rotation.w());
+
+
+                // const cameraOffset = new THREE.Vector3(0.0, 5.0, -5.0); // NOTE Constant offset between the camera and the target
+
+                // const objectPosition = new THREE.Vector3();
+                // chassisMesh.getWorldPosition(objectPosition);
+
+                // camera.position.copy(objectPosition).add(cameraOffset);
+
             });
 
             return chassisMesh;
@@ -261,46 +312,46 @@
                 }, 0, 2);
 
 
-            createRigidObject(
-                new THREE.Vector3(0, 10, 0),
-                ZERO_QUATERNION,
-                {
-                    height: 10,
-                    radius: 13,
-                    material: new THREE.MeshPhongMaterial({ color: 0xfca400 }),
-                    // [
-                    //     brickMaterial,
-                    //     brickMaterial
-                    // ]
-                }, 0, 2, false, 0xff0000);
+            // createRigidObject(
+            //     new THREE.Vector3(0, 10, 0),
+            //     ZERO_QUATERNION,
+            //     {
+            //         height: 10,
+            //         radius: 13,
+            //         material: new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+            //         // [
+            //         //     brickMaterial,
+            //         //     brickMaterial
+            //         // ]
+            //     }, 0, 2, false, 0xff0000);
 
-            createRigidObject(
-                new THREE.Vector3(0, 10, 20),
-                ZERO_QUATERNION,
-                {
-                    height: 40,
-                    width: 26,
-                    length: 10,
-                    material: new THREE.MeshPhongMaterial({ color: 0xfca400 }),
-                    // [
-                    //     brickMaterial,
-                    //     brickMaterial,
-                    //     brickMaterial,
-                    // ]
-                }, 0, 2, true, 0xff0000);
+            // createRigidObject(
+            //     new THREE.Vector3(0, 10, 20),
+            //     ZERO_QUATERNION,
+            //     {
+            //         height: 40,
+            //         width: 26,
+            //         length: 10,
+            //         material: new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+            //         // [
+            //         //     brickMaterial,
+            //         //     brickMaterial,
+            //         //     brickMaterial,
+            //         // ]
+            //     }, 0, 2, true, 0xff0000);
 
-            createRigidObject(
-                new THREE.Vector3(0, 10, 40),
-                ZERO_QUATERNION,
-                {
-                    height: 10,
-                    radius: 13,
-                    material: new THREE.MeshPhongMaterial({ color: 0xfca400 }),
-                    // [
-                    //     brickMaterial,
-                    //     brickMaterial
-                    // ]
-                }, 0, 2, false, 0xff0000);
+            // createRigidObject(
+            //     new THREE.Vector3(0, 10, 40),
+            //     ZERO_QUATERNION,
+            //     {
+            //         height: 10,
+            //         radius: 13,
+            //         material: new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+            //         // [
+            //         //     brickMaterial,
+            //         //     brickMaterial
+            //         // ]
+            //     }, 0, 2, false, 0xff0000);
         }
 
         function generateHeight(width, depth, minHeight, maxHeight) {
@@ -320,7 +371,7 @@
                         Math.pow((i - w2) / w2, 2.0) +
                         Math.pow((j - d2) / d2, 2.0));
 
-                    data[index] = Math.sin(radius * 10);
+                    data[index] = Math.sin(radius * 20) * 10;
 
                     index++;
                 }
@@ -329,7 +380,7 @@
         }
 
         function makeTerrain(material) {
-            var geometry = new THREE.PlaneBufferGeometry(100, 100, 100 - 1, 100 - 1);
+            var geometry = new THREE.PlaneBufferGeometry(1000, 1000, 100 - 1, 100 - 1);
             geometry.rotateX(- Math.PI / 2);
             var vertices = geometry.attributes.position.array;
             const heightData = generateHeight(100, 100, 100, 100);
@@ -338,7 +389,7 @@
             }
             var groundMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00, side: THREE.DoubleSide });
             terrainMesh = new THREE.Mesh(geometry, material);
-            terrainMesh.position.set(0, 8, 20);
+            terrainMesh.position.set(0, 0, 20);
 
             return terrainMesh;
         }
@@ -423,7 +474,7 @@
                     syncList[i](delta);
                 }
                 physicsWorld.stepSimulation(delta, 10);
-                controls.update(delta);
+                // controls.update(delta);
                 renderer.render(scene, camera);
 
                 requestAnimationFrame(update);
@@ -470,7 +521,7 @@
                 function (texture) {
                     texture.wrapS = THREE.RepeatWrapping;
                     texture.wrapT = THREE.RepeatWrapping;
-                    texture.repeat.set(4, 4);
+                    texture.repeat.set(40, 40);
                     const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, side: THREE.DoubleSide, map: texture });
 
                     scene.add(makeTerrain(material));
@@ -487,7 +538,7 @@
             const brickTexture = loader.load("https://i.imgur.com/7rTGpUi.jpeg");
             roadTexture.wrapS = THREE.RepeatWrapping;
             roadTexture.wrapT = THREE.RepeatWrapping;
-            roadTexture.repeat.set(4, 4);
+            roadTexture.repeat.set(10, 10);
 
 
             brickTexture.wrapS = THREE.RepeatWrapping;
