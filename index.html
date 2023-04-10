@@ -97,7 +97,7 @@
             const tuning = new Ammo.btVehicleTuning();
             const transform = new Ammo.btTransform();
             transform.setIdentity();
-            transform.setOrigin(new Ammo.btVector3(position.x, position.y + 20, position.z));
+            transform.setOrigin(new Ammo.btVector3(-30 + position.x, position.y + 20, position.z));
             transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
 
             const motionState = new Ammo.btDefaultMotionState(transform);
@@ -248,17 +248,17 @@
 
 
 
-                camera.position.set(
-                    position.x() + 10, 
-                    position.y() + 10, 
-                    position.z()
-                );
+                // camera.position.set(
+                //     position.x() + 10,
+                //     position.y() + 10,
+                //     position.z()
+                // );
 
-                camera.lookAt(
-                    position.x(),
-                    position.y(),
-                    position.z()
-                );
+                // camera.lookAt(
+                //     position.x(),
+                //     position.y(),
+                //     position.z()
+                // );
 
                 chassisMesh.position.set(position.x(), position.y(), position.z());
                 chassisMesh.quaternion.set(rotation.x(), rotation.y(), rotation.z(), rotation.w());
@@ -371,7 +371,7 @@
                         Math.pow((i - w2) / w2, 2.0) +
                         Math.pow((j - d2) / d2, 2.0));
 
-                    data[index] = Math.sin(radius * 20) * 10;
+                    data[index] = Math.sin(radius * 3) * 20;
 
                     index++;
                 }
@@ -379,15 +379,74 @@
             return data;
         }
 
+
+        function createTerrainShape(terrainWidth, terrainDepth, heightData) {
+            const heightScale = 1;
+            const upAxis = 1;
+            const hdt = "PHY_FLOAT";
+            const flipQuadEdges = false;
+            const ammoHeightData = Ammo._malloc(4 * terrainWidth * terrainDepth);
+            let p = 0;
+            let p2 = 0;
+
+            for (let j = 0; j < terrainDepth; j++) {
+                for (let i = 0; i < terrainWidth; i++) {
+                    Ammo.HEAPF32[ammoHeightData + p2 >> 2] = heightData[p];
+                    p++;
+                    p2 += 4;
+                }
+            }
+
+            const heightFieldShape = new Ammo.btHeightfieldTerrainShape(
+                terrainWidth,
+                terrainDepth,
+                ammoHeightData,
+                heightScale,
+                0,
+                30,
+                upAxis,
+                hdt,
+                flipQuadEdges
+            );
+
+            const scaleX = 1000 / (terrainWidth - 1);
+            const scaleZ = 1000 / (terrainDepth - 1);
+            heightFieldShape.setLocalScaling(new Ammo.btVector3(scaleX, 1, scaleZ));
+            heightFieldShape.setMargin(0.05);
+
+            return heightFieldShape;
+        }
+
         function makeTerrain(material) {
-            var geometry = new THREE.PlaneBufferGeometry(1000, 1000, 100 - 1, 100 - 1);
+
+            const terrainWidth = 1000;
+            const terrainDepth = 1000;
+
+            const heightData = generateHeight(1000, 1000, 100, 100);
+
+            const ammoTerrain = createTerrainShape(terrainWidth, terrainDepth, heightData);
+            const terrainTransform = new Ammo.btTransform();
+            terrainTransform.setIdentity();
+            terrainTransform.setOrigin(new Ammo.btVector3(0, 15, 20));
+
+            const groundBody = new Ammo.btRigidBody(
+                new Ammo.btRigidBodyConstructionInfo(
+                    0,
+                    new Ammo.btDefaultMotionState(terrainTransform),
+                    ammoTerrain,
+                    new Ammo.btVector3(0, 0, 0)
+                )
+            );
+            physicsWorld.addRigidBody(groundBody);
+
+            const geometry = new THREE.PlaneBufferGeometry(terrainWidth, terrainDepth, 1000 - 1, 1000 - 1);
             geometry.rotateX(- Math.PI / 2);
-            var vertices = geometry.attributes.position.array;
-            const heightData = generateHeight(100, 100, 100, 100);
-            for (var i = 0, j = 0, l = vertices.length; i < l; i++, j += 3) {
+            const vertices = geometry.attributes.position.array;
+            for (let i = 0, j = 0, l = vertices.length; i < l; i++, j += 3) {
                 vertices[j + 1] = heightData[i];
             }
-            var groundMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00, side: THREE.DoubleSide });
+
+            const groundMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00, side: THREE.DoubleSide });
             terrainMesh = new THREE.Mesh(geometry, material);
             terrainMesh.position.set(0, 0, 20);
 
