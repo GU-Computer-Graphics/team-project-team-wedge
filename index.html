@@ -26,7 +26,6 @@
 
         const container = document.getElementById("container");
         const syncList = [];
-        let transformAux1;
         const ZERO_QUATERNION = new THREE.Quaternion(0, 0, 0, 1);
         const dynamicObjects = [];
         const materialDynamic = new THREE.MeshPhongMaterial({ color: 0xfca400 });
@@ -45,9 +44,27 @@
             const wheelGeom = new THREE.CylinderGeometry(params.radius, params.radius, params.height, 50, 1);
             const wheelMesh = new THREE.Mesh(wheelGeom, new THREE.MeshPhongMaterial({ color: 0x000000 }));
 
-            wheelMesh.rotation.x = Math.PI / 2;
-            wheelMesh.rotation.z = Math.PI / 2;
+            wheelGeom.rotateZ(Math.PI / 2);
+
             scene.add(wheelMesh);
+
+
+            var wheelInfo = params.vehicle.addWheel(
+                params.position,
+                new Ammo.btVector3(0, -1, 0),
+                new Ammo.btVector3(-1, 0, 0),
+                0.6,
+                params.radius,
+                params.tuning,
+                params.isFront);
+
+            wheelInfo.set_m_suspensionStiffness(20.0);
+            wheelInfo.set_m_wheelsDampingRelaxation(2.3);
+            wheelInfo.set_m_wheelsDampingCompression(4.4);
+            wheelInfo.set_m_frictionSlip(1000);
+            wheelInfo.set_m_rollInfluence(0.2);
+
+
             return wheelMesh;
         }
 
@@ -57,53 +74,98 @@
                 y: 12.5,
                 z: -20
             }
+            const quat = ZERO_QUATERNION;
+            const tuning = new Ammo.btVehicleTuning();
+            const transform = new Ammo.btTransform();
+            transform.setIdentity();
+            transform.setOrigin(new Ammo.btVector3(position.x, position.y + 20, position.z));
+            transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
+
+            const motionState = new Ammo.btDefaultMotionState(transform);
+
+            const localInertia = new Ammo.btVector3(0, 0, 0);
+
             const chassisParams = {
-                height: 3,
-                width: 5,
-                length: 8
+                height: 2 / 4,
+                width: 5 / 4,
+                length: 8 / 4
             };
+
+            const ammoGeom = new Ammo.btBoxShape(
+                new Ammo.btVector3(
+                    chassisParams.width * .5,
+                    chassisParams.height * .5,
+                    chassisParams.length * .5
+                )
+            );
+            ammoGeom.calculateLocalInertia(800, localInertia);
+            const body = new Ammo.btRigidBody(new Ammo.btRigidBodyConstructionInfo(800, motionState, ammoGeom, localInertia));
+
+            body.setActivationState(4);
+            physicsWorld.addRigidBody(body);
+
+
+            const rayCaster = new Ammo.btDefaultVehicleRaycaster(physicsWorld);
+            const vehicle = new Ammo.btRaycastVehicle(tuning, body, rayCaster);
+            vehicle.setCoordinateSystem(0, 1, 2);
+            physicsWorld.addAction(vehicle);
 
             const wheelParams = {
-                radius: 1,
-                height: 1
+                radius: 1 / 4,
+                height: 1 / 4,
+                tuning: tuning,
+                vehicle
             };
+
+
             const chassisMesh = createChassis(chassisParams);
 
-
+            wheelParams.position = new Ammo.btVector3(chassisParams.width / 2, 0, chassisParams.length / 2);
+            wheelParams.isFront = true;
             const wheel1 = createWheel(wheelParams);
+
+
+            wheelParams.position = new Ammo.btVector3(-chassisParams.width / 2, 0, chassisParams.length / 2);
+            wheelParams.isFront = false;
             const wheel2 = createWheel(wheelParams);
+
+
+            wheelParams.position = new Ammo.btVector3(chassisParams.width / 2, 0, -chassisParams.length / 2);
+            wheelParams.isFront = false;
             const wheel3 = createWheel(wheelParams);
+
+            wheelParams.position = new Ammo.btVector3(-chassisParams.width / 2, 0, -chassisParams.length / 2);
+            wheelParams.isFront = true;
             const wheel4 = createWheel(wheelParams);
 
+
             chassisMesh.position.set(position.x, position.y, position.z);
-            wheel1.position.set(
-                0 + chassisParams.width / 2 + wheelParams.height / 2,
-                position.y - chassisParams.height / 2,
-                -20 - 1 + chassisParams.length / 2
-            );
 
-            wheel2.position.set(
-                0 + chassisParams.width / 2 + wheelParams.height / 2,
-                position.y - chassisParams.height / 2,
-                -20 + 1 - chassisParams.length / 2
-            );
+            const wheelMeshes = [];
+            wheelMeshes.push(wheel1, wheel4, wheel3, wheel2);
 
+            syncList.push(function () {
 
-            wheel3.position.set(
-                0 - chassisParams.width / 2 - wheelParams.height / 2,
-                position.y - chassisParams.height / 2,
-                -20 + 1 - chassisParams.length / 2
-            );
+                for (i = 0; i < 4; i++) {
+                    vehicle.updateWheelTransform(i, true);
+                    const wheelTransform = vehicle.getWheelTransformWS(i);
+                    const wheelPosition = wheelTransform.getOrigin();
+                    const wheelRotation = wheelTransform.getRotation();
+                    wheelMeshes[i].position.set(wheelPosition.x(), wheelPosition.y(), wheelPosition.z());
+                    wheelMeshes[i].quaternion.set(wheelRotation.x(), wheelRotation.y(), wheelRotation.z(), wheelRotation.w());
+                }
 
-            wheel4.position.set(
-                0 - chassisParams.width / 2 - wheelParams.height / 2,
-                position.y - chassisParams.height / 2,
-                -20 - 1 + chassisParams.length / 2
-            );
-
+                const vehicleTransform = vehicle.getChassisWorldTransform();
+                const position = vehicleTransform.getOrigin();
+                const rotation = vehicleTransform.getRotation();
+                chassisMesh.position.set(position.x(), position.y(), position.z());
+                chassisMesh.quaternion.set(rotation.x(), rotation.y(), rotation.z(), rotation.w());
+            });
 
             return chassisMesh;
         }
+
+
         function makeTrack(material, brickMaterial) {
             createRigidObject(new THREE.Vector3(0, 0, 0), ZERO_QUATERNION, { height: 20, radius: 25, material: [new THREE.MeshPhongMaterial({ color: 0xfca400 }), material, new THREE.MeshPhongMaterial({ color: 0xfca400 })] }, 0, 2);
             createRigidObject(
@@ -283,7 +345,6 @@
 
 
         function init(Ammo) {
-            transformAux1 = new Ammo.btTransform();
 
             function initPhysics() {
                 collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
@@ -296,6 +357,15 @@
 
             function update() {
                 renderer.render(scene, camera);
+
+                const delta = clock.getDelta();
+                for (var i = 0; i < syncList.length; i++) {
+                    syncList[i](delta);
+                }
+                physicsWorld.stepSimulation(delta, 10);
+                controls.update(delta);
+                renderer.render(scene, camera);
+
                 requestAnimationFrame(update);
             }
             function createObjectMaterial() {
@@ -370,7 +440,7 @@
                 makeTrack(material, brickMaterial)
             );
 
-            scene.add(createVehicle());
+            createVehicle();
 
 
             update();
