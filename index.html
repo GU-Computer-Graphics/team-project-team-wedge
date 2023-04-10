@@ -146,21 +146,21 @@
             const chassisMesh = createChassis(chassisParams);
             chassisMesh.add(camera);
 
-            wheelParams.position = new Ammo.btVector3(chassisParams.width / 2 , 0, chassisParams.length / 2);
+            wheelParams.position = new Ammo.btVector3(chassisParams.width / 2 + 0.1 , 0.2, chassisParams.length / 2);
             wheelParams.isFront = true;
             const wheel1 = createWheel(wheelParams);
 
 
-            wheelParams.position = new Ammo.btVector3(-chassisParams.width / 2, 0, chassisParams.length / 2);
+            wheelParams.position = new Ammo.btVector3(-(chassisParams.width / 2 + 0.1), 0.2, chassisParams.length / 2);
             wheelParams.isFront = false;
             const wheel2 = createWheel(wheelParams);
 
 
-            wheelParams.position = new Ammo.btVector3(chassisParams.width / 2, 0, -chassisParams.length / 2);
+            wheelParams.position = new Ammo.btVector3(chassisParams.width / 2 + 0.1, 0.2, -chassisParams.length / 2);
             wheelParams.isFront = false;
             const wheel3 = createWheel(wheelParams);
 
-            wheelParams.position = new Ammo.btVector3(-chassisParams.width / 2, 0, -chassisParams.length / 2);
+            wheelParams.position = new Ammo.btVector3(-(chassisParams.width / 2 + 0.1), 0.2, -chassisParams.length / 2);
             wheelParams.isFront = true;
             const wheel4 = createWheel(wheelParams);
 
@@ -178,32 +178,42 @@
                 if (window.shouldUpdate === false) {
                     return;
                 }
+
+                const maxForce = 1500;
                 const speed = vehicle.getCurrentSpeedKmHour();
                 let force = 0;
                 let breakingForce = 0;
 
                 if (keyState.w) {
-                    force = 1000;
+                    force = maxForce;
+                    if(speed < 0){
+                        breakingForce = 100;
+                    }
                 }
 
                 if (keyState.s) {
                     if (speed < 0) {
-                        force = -1000;
+                        force = -maxForce;
                     } else {
+                        force = -maxForce;
                         breakingForce = 100;
                     }
                 }
 
                 if (keyState.a) {
-                    vehicleSteering += 0.04;
+                    vehicleSteering += 0.001;
                 } else if (keyState.d) {
-                    vehicleSteering -= 0.04;
+                    vehicleSteering -= 0.001;
                 } else {
                     vehicleSteering = 0;
                 }
 
                 if (Math.abs(vehicleSteering) > 0.5) {
                     vehicleSteering = 0.5 * Math.sign(vehicleSteering);
+                }
+
+                if(speed > 100){
+                    force = 0;
                 }
 
                 vehicle.applyEngineForce(force, 1);
@@ -320,46 +330,46 @@
                 }, 0, 2);
 
 
-            // createRigidObject(
-            //     new THREE.Vector3(0, 10, 0),
-            //     ZERO_QUATERNION,
-            //     {
-            //         height: 10,
-            //         radius: 13,
-            //         material: new THREE.MeshPhongMaterial({ color: 0xfca400 }),
-            //         // [
-            //         //     brickMaterial,
-            //         //     brickMaterial
-            //         // ]
-            //     }, 0, 2, false, 0xff0000);
+            createRigidObject(
+                new THREE.Vector3(0, 10, 0),
+                ZERO_QUATERNION,
+                {
+                    height: 10,
+                    radius: 13,
+                    material: new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+                    // [
+                    //     brickMaterial,
+                    //     brickMaterial
+                    // ]
+                }, 0, 2, false, 0xff0000);
 
-            // createRigidObject(
-            //     new THREE.Vector3(0, 10, 20),
-            //     ZERO_QUATERNION,
-            //     {
-            //         height: 40,
-            //         width: 26,
-            //         length: 10,
-            //         material: new THREE.MeshPhongMaterial({ color: 0xfca400 }),
-            //         // [
-            //         //     brickMaterial,
-            //         //     brickMaterial,
-            //         //     brickMaterial,
-            //         // ]
-            //     }, 0, 2, true, 0xff0000);
+            createRigidObject(
+                new THREE.Vector3(0, 10, 20),
+                ZERO_QUATERNION,
+                {
+                    height: 40,
+                    width: 26,
+                    length: 10,
+                    material: new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+                    // [
+                    //     brickMaterial,
+                    //     brickMaterial,
+                    //     brickMaterial,
+                    // ]
+                }, 0, 2, true, 0xff0000);
 
-            // createRigidObject(
-            //     new THREE.Vector3(0, 10, 40),
-            //     ZERO_QUATERNION,
-            //     {
-            //         height: 10,
-            //         radius: 13,
-            //         material: new THREE.MeshPhongMaterial({ color: 0xfca400 }),
-            //         // [
-            //         //     brickMaterial,
-            //         //     brickMaterial
-            //         // ]
-            //     }, 0, 2, false, 0xff0000);
+            createRigidObject(
+                new THREE.Vector3(0, 10, 40),
+                ZERO_QUATERNION,
+                {
+                    height: 10,
+                    radius: 13,
+                    material: new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+                    // [
+                    //     brickMaterial,
+                    //     brickMaterial
+                    // ]
+                }, 0, 2, false, 0xff0000);
         }
 
         function generateHeight(width, depth, minHeight, maxHeight) {
