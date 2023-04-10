@@ -31,7 +31,26 @@
         const materialDynamic = new THREE.MeshPhongMaterial({ color: 0xfca400 });
         const materialStatic = new THREE.MeshPhongMaterial({ color: 0x999999 });
         const clock = new THREE.Clock();
+        const keyState = {
+            "w": false,
+            "a": false,
+            "s": false,
+            "d": false
+        }
 
+        window.addEventListener("keydown", (event) => {
+            const key = event.key.toLowerCase();
+            if (key in keyState) {
+                keyState[key] = true;
+            }
+        });
+
+        window.addEventListener("keyup", (event) => {
+            const key = event.key.toLowerCase();
+            if (key in keyState) {
+                keyState[key] = false;
+            }
+        });
 
         function createChassis(params) {
             const shape = new THREE.BoxGeometry(params.width, params.height, params.length, 1, 1, 1);
@@ -144,7 +163,48 @@
             const wheelMeshes = [];
             wheelMeshes.push(wheel1, wheel4, wheel3, wheel2);
 
+            let vehicleSteering = 0;
+
             syncList.push(function () {
+
+                const speed = vehicle.getCurrentSpeedKmHour();
+                let force = 0;
+                let breakingForce = 0;
+
+                if (keyState.w) {
+                    force = 1000;
+                }
+
+                if (keyState.s) {
+                    if (speed < 0) {
+                        force = -1000 / 2;
+                    } else {
+                        breakingForce = 100;
+                    }
+                }
+
+                if (keyState.a) {
+                    vehicleSteering += 0.04;
+                } else if (keyState.d) {
+                    vehicleSteering -= 0.04;
+                } else {
+                    vehicleSteering = 0;
+                }
+
+                if (Math.abs(vehicleSteering) > 0.5) {
+                    vehicleSteering = 0.5 * Math.sign(vehicleSteering);
+                }
+
+                vehicle.applyEngineForce(force, 1);
+                vehicle.applyEngineForce(force, 0);
+
+                vehicle.setBrake(breakingForce / 2, 0);
+                vehicle.setBrake(breakingForce / 2, 1);
+                vehicle.setBrake(breakingForce, 2);
+                vehicle.setBrake(breakingForce, 3);
+
+                vehicle.setSteeringValue(vehicleSteering, 0);
+                vehicle.setSteeringValue(vehicleSteering, 1);
 
                 for (i = 0; i < 4; i++) {
                     vehicle.updateWheelTransform(i, true);
