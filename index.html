@@ -37,11 +37,16 @@
             "s": false,
             "d": false
         }
+        let cameraState = 0;
 
         window.addEventListener("keydown", (event) => {
             const key = event.key.toLowerCase();
             if (key in keyState) {
                 keyState[key] = true;
+            }
+
+            if (key == "c") {
+                cameraState = ++cameraState % 3;
             }
         });
 
@@ -53,10 +58,12 @@
         });
 
         function createChassis(params) {
+            const chassisCon = new THREE.Object3D();
             const shape = new THREE.BoxGeometry(params.width, params.height, params.length, 1, 1, 1);
             const mesh = new THREE.Mesh(shape, new THREE.MeshPhongMaterial({ color: 0xff0000 }));
-            scene.add(mesh);
-            return mesh;
+            chassisCon.add(mesh);
+            scene.add(chassisCon);
+            return chassisCon;
         }
 
         function createWheel(params) {
@@ -91,7 +98,7 @@
             const position = {
                 x: 0,
                 y: 12.5,
-                z: -20
+                z: 0
             }
             const quat = ZERO_QUATERNION;
             const tuning = new Ammo.btVehicleTuning();
@@ -106,7 +113,7 @@
 
             const chassisParams = {
                 height: 2 / 4,
-                width: 5 / 4,
+                width: 6 / 4,
                 length: 8 / 4
             };
 
@@ -136,10 +143,10 @@
                 vehicle
             };
 
-
             const chassisMesh = createChassis(chassisParams);
+            chassisMesh.add(camera);
 
-            wheelParams.position = new Ammo.btVector3(chassisParams.width / 2, 0, chassisParams.length / 2);
+            wheelParams.position = new Ammo.btVector3(chassisParams.width / 2 , 0, chassisParams.length / 2);
             wheelParams.isFront = true;
             const wheel1 = createWheel(wheelParams);
 
@@ -247,18 +254,19 @@
                 // }
 
 
+                // if (cameraState == 1) {
+                //     camera.position.set(
+                //         position.x() + 10,
+                //         position.y() + 10,
+                //         position.z()
+                //     );
 
-                // camera.position.set(
-                //     position.x() + 10,
-                //     position.y() + 10,
-                //     position.z()
-                // );
-
-                // camera.lookAt(
-                //     position.x(),
-                //     position.y(),
-                //     position.z()
-                // );
+                //     camera.lookAt(
+                //         position.x(),
+                //         position.y(),
+                //         position.z()
+                //     );
+                // }
 
                 chassisMesh.position.set(position.x(), position.y(), position.z());
                 chassisMesh.quaternion.set(rotation.x(), rotation.y(), rotation.z(), rotation.w());
@@ -550,12 +558,14 @@
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.02, 2000);
             scene = new THREE.Scene();
 
-            camera.position.x = -3;
             camera.position.y = 2;
-            camera.position.z = 2;
+            camera.position.z = -10;
 
-            const controls = new THREE.OrbitControls(camera);
-            controls.update(0.1);
+            camera.rotation.y = Math.PI;
+
+
+            // const controls = new THREE.OrbitControls(camera);
+            // controls.update(0.1);
 
             const ambientLight = new THREE.AmbientLight(0x204040);
             scene.add(ambientLight);
