@@ -19,6 +19,17 @@
             text-align: center;
             width: 8%;
         }
+
+        #controls {
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            padding-left: 2px;
+            padding-right: 5px;
+            text-align: left;
+        }
     </style>
 </head>
 
@@ -674,6 +685,14 @@
             update();
         }
     </script>
+
+    <div id="controls">
+            <li>W : accelerate          </li>
+            <li>S : decelerate / reverse</li>
+            <li>A : turn left           </li>
+            <li>D : turn right          </li>
+            <li>SPACE : handbrake </li>
+    </div>
 
     <div id="speedometer">
         <p id="speed">0.00</p>
