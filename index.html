@@ -9,6 +9,16 @@
         body {
             margin: 0;
         }
+
+        #speedometer {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            padding: 40px;
+            background-color: gray;
+            text-align: center;
+            width: 8%;
+        }
     </style>
 </head>
 
@@ -21,41 +31,62 @@
     <script src="./js/OrbitControls.js"></script>
     <script>
 
-        let camera, scene, renderer;
-        Ammo().then((Ammo) => init(Ammo));
-
         const container = document.getElementById("container");
-        const syncList = [];
         const ZERO_QUATERNION = new THREE.Quaternion(0, 0, 0, 1);
-        const dynamicObjects = [];
         const materialDynamic = new THREE.MeshPhongMaterial({ color: 0xfca400 });
         const materialStatic = new THREE.MeshPhongMaterial({ color: 0x999999 });
         const clock = new THREE.Clock();
+
+        const syncList = [];
+        const dynamicObjects = [];            
         const keyState = {
             "w": false,
             "a": false,
             "s": false,
-            "d": false
+            "d": false,
+            "space": false
         }
-        let cameraState = 0;
+
+        var cameraState = 0;
+        var camera, scene, renderer;
+        var carSpeed = 0.00;
+
+        Ammo().then((Ammo) => init(Ammo));
 
         window.addEventListener("keydown", (event) => {
             const key = event.key.toLowerCase();
             if (key in keyState) {
+                console.log("Keydown: " + key);
                 keyState[key] = true;
             }
 
             if (key == "c") {
                 cameraState = ++cameraState % 3;
             }
+
+            // TODO: Handbrake / emergency brake
+            if (event.key == " " || event.code == "Space" || event.keyCode == 32) {
+                console.log("Keydown: space")
+                keyState[space] = true;
+            }
         });
 
         window.addEventListener("keyup", (event) => {
             const key = event.key.toLowerCase();
             if (key in keyState) {
+                console.log("Keyup: " + key);
                 keyState[key] = false;
             }
+
+            if (event.key == " " || event.code == "Space" || event.keyCode == 32) {
+                console.log("Keyup: space")
+                keyState[space] = false;
+            }
         });
+
+        window.setInterval(function() {
+            document.getElementById("speed").innerHTML = carSpeed;
+        }, 50);
 
         function createChassis(params) {
             const chassisCon = new THREE.Object3D();
@@ -182,12 +213,12 @@
                 const maxForce = 1500;
                 const speed = vehicle.getCurrentSpeedKmHour();
                 let force = 0;
-                let breakingForce = 0;
+                let brakingForce = 0;
 
                 if (keyState.w) {
                     force = maxForce;
                     if(speed < 0){
-                        breakingForce = 100;
+                        brakingForce = 100;
                     }
                 }
 
@@ -196,7 +227,7 @@
                         force = -maxForce;
                     } else {
                         force = -maxForce;
-                        breakingForce = 100;
+                        brakingForce = 100;
                     }
                 }
 
@@ -219,10 +250,10 @@
                 vehicle.applyEngineForce(force, 1);
                 vehicle.applyEngineForce(force, 0);
 
-                vehicle.setBrake(breakingForce / 2, 0);
-                vehicle.setBrake(breakingForce / 2, 1);
-                vehicle.setBrake(breakingForce, 2);
-                vehicle.setBrake(breakingForce, 3);
+                vehicle.setBrake(brakingForce / 2, 0);
+                vehicle.setBrake(brakingForce / 2, 1);
+                vehicle.setBrake(brakingForce, 2);
+                vehicle.setBrake(brakingForce, 3);
 
                 vehicle.setSteeringValue(vehicleSteering, 0);
                 vehicle.setSteeringValue(vehicleSteering, 1);
@@ -281,6 +312,8 @@
                 chassisMesh.position.set(position.x(), position.y(), position.z());
                 chassisMesh.quaternion.set(rotation.x(), rotation.y(), rotation.z(), rotation.w());
 
+                let speedFixed = speed.toFixed(2);
+                carSpeed = speedFixed;
 
                 // const cameraOffset = new THREE.Vector3(0.0, 5.0, -5.0); // NOTE Constant offset between the camera and the target
 
@@ -293,7 +326,6 @@
 
             return chassisMesh;
         }
-
 
         function makeTrack(material, brickMaterial) {
             createRigidObject(new THREE.Vector3(0, 0, 0), ZERO_QUATERNION, { height: 20, radius: 25, material: [new THREE.MeshPhongMaterial({ color: 0xfca400 }), material, new THREE.MeshPhongMaterial({ color: 0xfca400 })] }, 0, 2);
@@ -396,7 +428,6 @@
             }
             return data;
         }
-
 
         function createTerrainShape(terrainWidth, terrainDepth, heightData) {
             const heightScale = 1;
@@ -530,8 +561,6 @@
             }
         }
 
-
-
         function init(Ammo) {
 
             function initPhysics() {
@@ -556,6 +585,7 @@
 
                 requestAnimationFrame(update);
             }
+
             function createObjectMaterial() {
                 var c = Math.floor(Math.random() * (1 << 24));
                 return new THREE.MeshPhongMaterial({ color: c });
@@ -632,13 +662,15 @@
 
             createVehicle();
 
-
             update();
         }
-
-
-
     </script>
+
+    <div id="speedometer">
+        <p id="speed">0.00</p>
+        <p>kmph</p>
+    </div>
+    
 </body>
 
 </html>
