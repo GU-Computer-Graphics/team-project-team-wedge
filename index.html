@@ -33,6 +33,24 @@
     </style>
 </head>
 
+<!--
+POSSIBLE TODO IDEAS:
+
+    Forerunner ideas:
+        position car over track or lower track so car can drive on it
+        different camera views
+        
+    Backburner ideas:
+        create functional brakelights
+            add lights to car model
+            use eventlisteners to toggle light.visible when s keydown (until keyup) or space keydown (until keyup)
+        create toggle-able headlights
+            same process as above
+        make car prettier
+        FPS display counter (should be part of stats.js)
+        add props to track
+-->
+
 <body>
     <div id="container"></div>
 
@@ -55,7 +73,7 @@
             "a": false,
             "s": false,
             "d": false,
-            "space": false      // TODO: Handbrake / emergency brake
+            "space": false,
         }
 
         var cameraState = 0;
@@ -695,7 +713,7 @@
     </div>
 
     <div id="speedometer">
-        <p id="speed">0.00</p>
+        <p id="speed">00.00</p>
         <p>kmph</p>
     </div>
     
