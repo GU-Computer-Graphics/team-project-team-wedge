@@ -44,7 +44,7 @@
             "a": false,
             "s": false,
             "d": false,
-            "space": false
+            "space": false      // TODO: Handbrake / emergency brake
         }
 
         var cameraState = 0;
@@ -64,10 +64,9 @@
                 cameraState = ++cameraState % 3;
             }
 
-            // TODO: Handbrake / emergency brake
             if (event.key == " " || event.code == "Space" || event.keyCode == 32) {
                 console.log("Keydown: space")
-                keyState[space] = true;
+                keyState["space"] = true;
             }
         });
 
@@ -80,7 +79,7 @@
 
             if (event.key == " " || event.code == "Space" || event.keyCode == 32) {
                 console.log("Keyup: space")
-                keyState[space] = false;
+                keyState["space"] = false;
             }
         });
 
@@ -237,6 +236,16 @@
                     vehicleSteering -= 0.001;
                 } else {
                     vehicleSteering = 0;
+                }
+
+                if (keyState.space){
+                    if(force > 0){
+                        force = -maxForce;
+                        brakingForce = 50;
+                    } else {
+                        force = maxForce;
+                        brakingForce = 50;
+                    }
                 }
 
                 if (Math.abs(vehicleSteering) > 0.5) {
