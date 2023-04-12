@@ -67,7 +67,7 @@ POSSIBLE TODO IDEAS:
         const clock = new THREE.Clock();
 
         const syncList = [];
-        const dynamicObjects = [];            
+        const dynamicObjects = [];
         const keyState = {
             "w": false,
             "a": false,
@@ -90,7 +90,7 @@ POSSIBLE TODO IDEAS:
             }
 
             if (key == "c") {
-                cameraState = ++cameraState % 3;
+                cameraState = ++cameraState % 6;
             }
 
             if (event.key == " " || event.code == "Space" || event.keyCode == 32) {
@@ -112,7 +112,7 @@ POSSIBLE TODO IDEAS:
             }
         });
 
-        window.setInterval(function() {
+        window.setInterval(function () {
             document.getElementById("speed").innerHTML = carSpeed;
         }, 50);
 
@@ -205,7 +205,7 @@ POSSIBLE TODO IDEAS:
             const chassisMesh = createChassis(chassisParams);
             chassisMesh.add(camera);
 
-            wheelParams.position = new Ammo.btVector3(chassisParams.width / 2 + 0.1 , 0.2, chassisParams.length / 2);
+            wheelParams.position = new Ammo.btVector3(chassisParams.width / 2 + 0.1, 0.2, chassisParams.length / 2);
             wheelParams.isFront = true;
             const wheel1 = createWheel(wheelParams);
 
@@ -245,7 +245,7 @@ POSSIBLE TODO IDEAS:
 
                 if (keyState.w) {
                     force = maxForce;
-                    if(speed < 0){
+                    if (speed < 0) {
                         brakingForce = 100;
                     }
                 }
@@ -267,8 +267,8 @@ POSSIBLE TODO IDEAS:
                     vehicleSteering = 0;
                 }
 
-                if (keyState.space){
-                    if(force > 0){
+                if (keyState.space) {
+                    if (force > 0) {
                         force = -maxForce;
                         brakingForce = 50;
                     } else {
@@ -281,7 +281,7 @@ POSSIBLE TODO IDEAS:
                     vehicleSteering = 0.5 * Math.sign(vehicleSteering);
                 }
 
-                if(speed > 100){
+                if (speed > 100) {
                     force = 0;
                 }
 
@@ -333,19 +333,24 @@ POSSIBLE TODO IDEAS:
                 // }
 
 
-                // if (cameraState == 1) {
-                //     camera.position.set(
-                //         position.x() + 10,
-                //         position.y() + 10,
-                //         position.z()
-                //     );
-
-                //     camera.lookAt(
-                //         position.x(),
-                //         position.y(),
-                //         position.z()
-                //     );
-                // }
+                if (cameraState == 0) {
+                    camera.position.set(0, 2, -10);
+                    camera.rotation.set(0, Math.PI, 0);
+                } else if (cameraState == 1) {
+                    camera.position.set(0, 0, 0);
+                    camera.rotation.set(0, Math.PI, 0);
+                } else if (cameraState == 2) {
+                    camera.position.set(0, 0, 0);
+                    camera.rotation.set(0, 0, 0);
+                } else if (cameraState == 3) {
+                    camera.position.set(0, 2, 10);
+                    camera.rotation.set(0, 0, 0);
+                } else if (cameraState == 4) {
+                    camera.position.set(10, 10, 0);
+                    camera.lookAt(0, 0, 0);
+                } else{
+                    // Letting OrbitControl take over
+                }
 
                 chassisMesh.position.set(position.x(), position.y(), position.z());
                 chassisMesh.quaternion.set(rotation.x(), rotation.y(), rotation.z(), rotation.w());
@@ -642,7 +647,7 @@ POSSIBLE TODO IDEAS:
             camera.rotation.y = Math.PI;
 
 
-            // const controls = new THREE.OrbitControls(camera);
+            const controls = new THREE.OrbitControls(camera);
             // controls.update(0.1);
 
             const ambientLight = new THREE.AmbientLight(0x204040);
@@ -705,18 +710,18 @@ POSSIBLE TODO IDEAS:
     </script>
 
     <div id="controls">
-            <li>W : accelerate          </li>
-            <li>S : decelerate / reverse</li>
-            <li>A : turn left           </li>
-            <li>D : turn right          </li>
-            <li>SPACE : handbrake </li>
+        <li>W : accelerate </li>
+        <li>S : decelerate / reverse</li>
+        <li>A : turn left </li>
+        <li>D : turn right </li>
+        <li>SPACE : handbrake </li>
     </div>
 
     <div id="speedometer">
         <p id="speed">00.00</p>
         <p>kmph</p>
     </div>
-    
+
 </body>
 
 </html>
