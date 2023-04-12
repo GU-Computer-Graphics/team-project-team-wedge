@@ -1,5 +1,5 @@
 # Computer Graphics Collaborative Project
-## CPSC-425 Spring 2023 ; 2 Team Wedge Car
+## CPSC-425 Spring 2023 Team 2; "Team Wedge Car"
 
 ### Project Members
 Dominic Bevilacqua
