@@ -699,9 +699,7 @@ POSSIBLE TODO IDEAS:
 
             const material = new THREE.MeshPhongMaterial({ side: THREE.DoubleSide, map: roadTexture });
             const brickMaterial = new THREE.MeshPhongMaterial({ side: THREE.DoubleSide, map: brickTexture });
-            scene.add(
-                makeTrack(material, brickMaterial)
-            );
+            makeTrack(material, brickMaterial)
 
             createVehicle();
 
