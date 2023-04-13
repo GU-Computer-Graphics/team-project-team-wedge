@@ -155,15 +155,15 @@ POSSIBLE TODO IDEAS:
 
         function createVehicle() {
             const position = {
-                x: 0,
-                y: 12.5,
+                x: -20,
+                y: 15,
                 z: 0
             }
             const quat = ZERO_QUATERNION;
             const tuning = new Ammo.btVehicleTuning();
             const transform = new Ammo.btTransform();
             transform.setIdentity();
-            transform.setOrigin(new Ammo.btVector3(-30 + position.x, position.y + 20, position.z));
+            transform.setOrigin(new Ammo.btVector3(position.x, position.y, position.z));
             transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
 
             const motionState = new Ammo.btDefaultMotionState(transform);
