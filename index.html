@@ -59,6 +59,10 @@ POSSIBLE TODO IDEAS:
     <script src="./js/stats.js"></script>
     <script src="./js/OrbitControls.js"></script>
     <script>
+        const VehicleLights = {
+            OFF: new THREE.Color("black"),
+            REAR_ON: new THREE.Color("brown"),
+        };
 
         const container = document.getElementById("container");
         const ZERO_QUATERNION = new THREE.Quaternion(0, 0, 0, 1);
@@ -116,13 +120,57 @@ POSSIBLE TODO IDEAS:
             document.getElementById("speed").innerHTML = carSpeed;
         }, 50);
 
+        /**
+         * @param {Object} params
+         * @param {Number} params.width
+         * @param {Number} params.height
+         * @param {Number} params.length
+         */
         function createChassis(params) {
-            const chassisCon = new THREE.Object3D();
-            const shape = new THREE.BoxGeometry(params.width, params.height, params.length, 1, 1, 1);
-            const mesh = new THREE.Mesh(shape, new THREE.MeshPhongMaterial({ color: 0xff0000 }));
-            chassisCon.add(mesh);
-            scene.add(chassisCon);
-            return chassisCon;
+            const chassis = new THREE.Mesh(
+                new THREE.BoxGeometry(params.width, params.height, params.length),
+                new THREE.MeshPhongMaterial({ color: "white" })
+            );
+
+            const makeLight = (pos, color, name) => {
+                const dimensions = chassis.geometry.parameters;
+                const mesh = new THREE.Mesh(
+                    new THREE.BoxGeometry(dimensions.width / 8, dimensions.height / 4, dimensions.depth / 8),
+                    new THREE.MeshPhongMaterial({ color }),
+                );
+                mesh.name = "mesh";
+                mesh.position.set(pos.roll * dimensions.width / 2.2, 0, pos.pitch * dimensions.depth / 2);
+                mesh.position.x -= pos.roll * mesh.geometry.parameters.width / 2;
+
+                const light = new THREE.SpotLight();
+                light.name = "light";
+                light.visible = false;
+                light.color = new THREE.Color(color);
+                light.penumbra = 0.8;
+                light.angle = Math.PI / 4;
+                light.position.copy(mesh.position);
+                light.position.z += pos.pitch * mesh.geometry.parameters.depth / 2;
+
+                light.target = new THREE.Object3D();
+                light.target.name = "target";
+                light.target.position.copy(light.position);
+                light.target.position.z += pos.pitch;
+
+                const object = new THREE.Object3D();
+                object.name = name;
+                object.add(mesh, light, light.target);
+                return object;
+            }
+
+            const composite = new THREE.Object3D();
+            composite.add(
+                chassis,
+                makeLight({ roll: +1, pitch: -1 }, "brown", "bl"),
+                makeLight({ roll: -1, pitch: -1 }, "brown", "br"),
+            );
+
+            scene.add(composite);
+            return composite;
         }
 
         function createWheel(params) {
@@ -236,6 +284,19 @@ POSSIBLE TODO IDEAS:
             syncList.push(function () {
                 if (window.shouldUpdate === false) {
                     return;
+                }
+
+                const tails = [chassisMesh.getObjectByName("bl"), chassisMesh.getObjectByName("br")];
+                for (const tail of tails) {
+                    const light = tail.getObjectByName("light");
+                    const mesh = tail.getObjectByName("mesh");
+                    if (keyState.s || keyState.space) {
+                        light.visible = true;
+                        mesh.material.emissive = VehicleLights.REAR_ON;
+                    } else {
+                        light.visible = false;
+                        mesh.material.emissive = VehicleLights.OFF;
+                    }
                 }
 
                 const maxForce = 1500;
