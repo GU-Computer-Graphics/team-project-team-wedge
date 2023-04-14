@@ -72,49 +72,83 @@ POSSIBLE TODO IDEAS:
 
         const syncList = [];
         const dynamicObjects = [];
-        const keyState = {
-            "w": false,
-            "a": false,
-            "s": false,
-            "d": false,
-            "space": false,
+
+        const KeyStates = {
+            UP: 0,
+            UNLOCKED: 1,
+            JUST_PRESSED: 2,
+            REPEATING: 3,
+            LAST: 4,
+        };
+
+        class KeyState {
+            #state = KeyStates.UP;
+
+            reset() { this.#state = KeyStates.UP; }
+            unlock() { this.#state = KeyStates.UNLOCKED; }
+            advance() {
+                if (this.#state >= KeyStates.UNLOCKED) {
+                    this.#state = Math.min(this.#state + 1, KeyStates.LAST - 1);
+                }
+            }
+
+            isDown() { return !this.isUp(); }
+            isUp() { return this.#state === KeyStates.UP; }
+            justPressed() { return this.#state === KeyStates.JUST_PRESSED; }
+            repeating() { return this.#state === KeyStates.REPEATING; }
         }
+
+        class Keyboard {
+            #mappings = new Map()
+
+            constructor() {
+                const keyCodes = {
+                    forward: "KeyW",
+                    backward: "KeyS",
+                    left: "KeyA",
+                    right: "KeyD",
+                    brake: "Space",
+                    camera: "KeyC",
+                };
+
+                for (const [k, v] of Object.entries(keyCodes)) {
+                    this.#mappings.set(v, new KeyState());
+                    Object.defineProperty(
+                        this,
+                        k,
+                        { get() { return this.#mappings.get(v) } },
+                    );
+                }
+
+                window.addEventListener("keydown", (event) => {
+                    const state = this.#mappings.get(event.code);
+                    if (state !== undefined && state.isUp()) {
+                        state.unlock();
+                    }
+                });
+
+                window.addEventListener("keyup", (event) => {
+                    const state = this.#mappings.get(event.code);
+                    if (state !== undefined) {
+                        state.reset();
+                    }
+                });
+
+                syncList.push(() => {
+                    for (const state of this.#mappings.values()) {
+                        state.advance();
+                    }
+                });
+            }
+        }
+
+        const keyboard = new Keyboard();
 
         var cameraState = 0;
         var camera, scene, renderer;
         var carSpeed = 0.00;
 
         Ammo().then((Ammo) => init(Ammo));
-
-        window.addEventListener("keydown", (event) => {
-            const key = event.key.toLowerCase();
-            if (key in keyState) {
-                console.log("Keydown: " + key);
-                keyState[key] = true;
-            }
-
-            if (key == "c") {
-                cameraState = ++cameraState % 6;
-            }
-
-            if (event.key == " " || event.code == "Space" || event.keyCode == 32) {
-                console.log("Keydown: space")
-                keyState["space"] = true;
-            }
-        });
-
-        window.addEventListener("keyup", (event) => {
-            const key = event.key.toLowerCase();
-            if (key in keyState) {
-                console.log("Keyup: " + key);
-                keyState[key] = false;
-            }
-
-            if (event.key == " " || event.code == "Space" || event.keyCode == 32) {
-                console.log("Keyup: space")
-                keyState["space"] = false;
-            }
-        });
 
         window.setInterval(function () {
             document.getElementById("speed").innerHTML = carSpeed;
@@ -286,11 +320,15 @@ POSSIBLE TODO IDEAS:
                     return;
                 }
 
+                if (keyboard.camera.justPressed()) {
+                    cameraState = ++cameraState % 6;
+                }
+
                 const tails = [chassisMesh.getObjectByName("bl"), chassisMesh.getObjectByName("br")];
                 for (const tail of tails) {
                     const light = tail.getObjectByName("light");
                     const mesh = tail.getObjectByName("mesh");
-                    if (keyState.s || keyState.space) {
+                    if (keyboard.backward.isDown() || keyboard.brake.isDown()) {
                         if (!light.visible) {
                             light.visible = true;
                             mesh.material.emissive = VehicleLights.REAR_ON;
@@ -308,14 +346,14 @@ POSSIBLE TODO IDEAS:
                 let force = 0;
                 let brakingForce = 0;
 
-                if (keyState.w) {
+                if (keyboard.forward.isDown()) {
                     force = maxForce;
                     if (speed < 0) {
                         brakingForce = 100;
                     }
                 }
 
-                if (keyState.s) {
+                if (keyboard.backward.isDown()) {
                     if (speed < 0) {
                         force = -maxForce;
                     } else {
@@ -324,15 +362,15 @@ POSSIBLE TODO IDEAS:
                     }
                 }
 
-                if (keyState.a) {
+                if (keyboard.left.isDown()) {
                     vehicleSteering += 0.001;
-                } else if (keyState.d) {
+                } else if (keyboard.right.isDown()) {
                     vehicleSteering -= 0.001;
                 } else {
                     vehicleSteering = 0;
                 }
 
-                if (keyState.space) {
+                if (keyboard.brake.isDown()) {
                     if (force > 0) {
                         force = -maxForce;
                         brakingForce = 50;
