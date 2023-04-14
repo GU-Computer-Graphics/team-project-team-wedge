@@ -165,8 +165,8 @@ POSSIBLE TODO IDEAS:
             const composite = new THREE.Object3D();
             composite.add(
                 chassis,
-                makeLight({ roll: +1, pitch: -1 }, "brown", "bl"),
-                makeLight({ roll: -1, pitch: -1 }, "brown", "br"),
+                makeLight({ roll: +1, pitch: -1 }, VehicleLights.REAR_ON, "bl"),
+                makeLight({ roll: -1, pitch: -1 }, VehicleLights.REAR_ON, "br"),
             );
 
             scene.add(composite);
