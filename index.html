@@ -30,7 +30,6 @@
             padding-right: 5px;
             text-align: left;
         }
-
     </style>
 </head>
 
@@ -450,6 +449,13 @@ POSSIBLE TODO IDEAS:
                 //     );
                 // }
 
+                function toggleHeadlightVisibility(state) {
+                    const heads = [chassisMesh.getObjectByName("fl"), chassisMesh.getObjectByName("fr")];
+                    for (const head of heads) {
+                        const mesh = head.getObjectByName("mesh");
+                        mesh.visible = state;
+                    }
+                }
 
                 if (cameraState == 0) {
                     camera.position.set(0, 2, -10);
@@ -457,9 +463,11 @@ POSSIBLE TODO IDEAS:
                 } else if (cameraState == 1) {
                     camera.position.set(0, 0, 0);
                     camera.rotation.set(0, Math.PI, 0);
+                    toggleHeadlightVisibility(false);
                 } else if (cameraState == 2) {
                     camera.position.set(0, 0, 0);
                     camera.rotation.set(0, 0, 0);
+                    toggleHeadlightVisibility(true);
                 } else if (cameraState == 3) {
                     camera.position.set(0, 2, 10);
                     camera.rotation.set(0, 0, 0);
