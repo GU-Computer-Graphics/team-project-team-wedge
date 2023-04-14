@@ -152,19 +152,19 @@ POSSIBLE TODO IDEAS:
             container.appendChild(renderer.domElement);
 
             const terrainTexture = assetLoader(
-                "https://i.imgur.com/7PbdSdY.jpg",
+                "https://raw.githubusercontent.com/GU-Computer-Graphics/team-project-team-wedge/main/assets/grass.jpg",
                 {
-                    wrapS: THREE.RepeatWrapping,
-                    wrapT: THREE.RepeatWrapping,
+                    wrapS: THREE.MirroredRepeatWrapping,
+                    wrapT: THREE.MirroredRepeatWrapping,
                     repeat: {
-                        U: 400,
-                        V: 400
+                        U: 40,
+                        V: 40
                     },
                 }
             );
 
             const roadTexture = assetLoader(
-                "https://t4.ftcdn.net/jpg/02/86/45/25/360_F_286452528_dnDH3uUUQUGQ7EsxZ9Ky1YXsH1kPVj4y.jpg",
+                "https://raw.githubusercontent.com/GU-Computer-Graphics/team-project-team-wedge/main/assets/road.jpg",
                 {
                     wrapS: THREE.RepeatWrapping,
                     wrapT: THREE.RepeatWrapping,
@@ -176,7 +176,7 @@ POSSIBLE TODO IDEAS:
             );
 
             const brickTexture = assetLoader(
-                "https://i.imgur.com/7rTGpUi.jpeg",
+                "https://raw.githubusercontent.com/GU-Computer-Graphics/team-project-team-wedge/main/assets/brick.jpg",
                 {
                     wrapS: THREE.RepeatWrapping,
                     wrapT: THREE.RepeatWrapping,
