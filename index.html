@@ -53,10 +53,15 @@ POSSIBLE TODO IDEAS:
 <body>
     <div id="container"></div>
 
-    <script src="./js/ammo.js"></script>
-    <script src="./js/three.js"></script>
-    <script src="./js/stats.js"></script>
-    <script src="./js/OrbitControls.js"></script>
+    <script src="./js/libs/ammo.js"></script>
+    <script src="./js/libs/three.js"></script>
+    <script src="./js/libs/stats.js"></script>
+    <script src="./js/libs/OrbitControls.js"></script>
+
+    <script src="./js/keyboard.js"></script>
+    <script src="./js/car.js"></script>
+    <script src="./js/scene.js"></script>
+
     <script>
         const VehicleLights = {
             OFF: new THREE.Color("black"),
@@ -66,10 +71,8 @@ POSSIBLE TODO IDEAS:
 
         const container = document.getElementById("container");
         const ZERO_QUATERNION = new THREE.Quaternion(0, 0, 0, 1);
-        const materialDynamic = new THREE.MeshPhongMaterial({ color: 0xfca400 });
-        const materialStatic = new THREE.MeshPhongMaterial({ color: 0x999999 });
+        const loader = new THREE.TextureLoader();
         const clock = new THREE.Clock();
-
         const syncList = [];
         const dynamicObjects = [];
 
@@ -80,757 +83,140 @@ POSSIBLE TODO IDEAS:
             REPEATING: 3,
             LAST: 4,
         };
-
-        class KeyState {
-            #state = KeyStates.UP;
-
-            reset() { this.#state = KeyStates.UP; }
-            unlock() { this.#state = KeyStates.UNLOCKED; }
-            advance() {
-                if (this.#state >= KeyStates.UNLOCKED) {
-                    this.#state = Math.min(this.#state + 1, KeyStates.LAST - 1);
-                }
-            }
-
-            isDown() { return !this.isUp(); }
-            isUp() { return this.#state === KeyStates.UP; }
-            justPressed() { return this.#state === KeyStates.JUST_PRESSED; }
-            repeating() { return this.#state === KeyStates.REPEATING; }
-        }
-
-        class Keyboard {
-            #mappings = new Map()
-
-            constructor() {
-                const keyCodes = {
-                    forward: "KeyW",
-                    backward: "KeyS",
-                    left: "KeyA",
-                    right: "KeyD",
-                    brake: "Space",
-                    camera: "KeyC",
-                    headlight: "KeyL",
-                };
-
-                for (const [k, v] of Object.entries(keyCodes)) {
-                    this.#mappings.set(v, new KeyState());
-                    Object.defineProperty(
-                        this,
-                        k,
-                        { get() { return this.#mappings.get(v) } },
-                    );
-                }
-
-                window.addEventListener("keydown", (event) => {
-                    const state = this.#mappings.get(event.code);
-                    if (state !== undefined && state.isUp()) {
-                        state.unlock();
-                    }
-                });
-
-                window.addEventListener("keyup", (event) => {
-                    const state = this.#mappings.get(event.code);
-                    if (state !== undefined) {
-                        state.reset();
-                    }
-                });
-
-                syncList.push(() => {
-                    for (const state of this.#mappings.values()) {
-                        state.advance();
-                    }
-                });
-            }
-        }
-
         const keyboard = new Keyboard();
+        let cameraState = 0;
+        let camera, scene, renderer;
+        let carSpeed = 0.00;
 
-        var cameraState = 0;
-        var camera, scene, renderer;
-        var carSpeed = 0.00;
+        function assetLoader(url, config) {
+            const texture = loader.load(url);
 
-        Ammo().then((Ammo) => init(Ammo));
+            texture.wrapS = config.wrapS;
+            texture.wrapT = config.wrapS;
+            texture.repeat.set(config.repeat.U, 40);
+            texture.repeat.set(config.repeat.V, 40);
 
-        window.setInterval(function () {
-            document.getElementById("speed").innerHTML = carSpeed;
-        }, 50);
-
-        /**
-         * @param {Object} params
-         * @param {Number} params.width
-         * @param {Number} params.height
-         * @param {Number} params.length
-         */
-        function createChassis(params) {
-            const chassis = new THREE.Mesh(
-                new THREE.BoxGeometry(params.width, params.height, params.length),
-                new THREE.MeshPhongMaterial({ color: "white" })
-            );
-
-            const makeLight = (pos, color, name) => {
-                const dimensions = chassis.geometry.parameters;
-                const mesh = new THREE.Mesh(
-                    new THREE.BoxGeometry(dimensions.width / 8, dimensions.height / 4, dimensions.depth / 8),
-                    new THREE.MeshPhongMaterial({ color }),
-                );
-                mesh.name = "mesh";
-                mesh.position.set(pos.roll * dimensions.width / 2.2, 0, pos.pitch * dimensions.depth / 2);
-                mesh.position.x -= pos.roll * mesh.geometry.parameters.width / 2;
-
-                const light = new THREE.SpotLight();
-                light.name = "light";
-                light.visible = false;
-                light.color = new THREE.Color(color);
-                light.penumbra = 0.8;
-                light.angle = Math.PI / 4;
-                light.position.copy(mesh.position);
-                light.position.z += pos.pitch * mesh.geometry.parameters.depth / 2;
-
-                light.target = new THREE.Object3D();
-                light.target.name = "target";
-                light.target.position.copy(light.position);
-                light.target.position.z += pos.pitch;
-
-                const object = new THREE.Object3D();
-                object.name = name;
-                object.add(mesh, light, light.target);
-                return object;
-            }
-
-            const composite = new THREE.Object3D();
-            composite.add(
-                chassis,
-                makeLight({ roll: +1, pitch: -1 }, VehicleLights.REAR_ON, "bl"),
-                makeLight({ roll: -1, pitch: -1 }, VehicleLights.REAR_ON, "br"),
-                makeLight({ roll: +1, pitch: +1 }, VehicleLights.FRONT_ON, "fl"),
-                makeLight({ roll: -1, pitch: +1 }, VehicleLights.FRONT_ON, "fr"),
-            );
-
-            scene.add(composite);
-            return composite;
+            return texture;
         }
 
-        function createWheel(params) {
-            const wheelGeom = new THREE.CylinderGeometry(params.radius, params.radius, params.height, 50, 1);
-            const wheelMesh = new THREE.Mesh(wheelGeom, new THREE.MeshPhongMaterial({ color: 0x000000 }));
-
-            wheelGeom.rotateZ(Math.PI / 2);
-
-            scene.add(wheelMesh);
-
-
-            var wheelInfo = params.vehicle.addWheel(
-                params.position,
-                new Ammo.btVector3(0, -1, 0),
-                new Ammo.btVector3(-1, 0, 0),
-                0.6,
-                params.radius,
-                params.tuning,
-                params.isFront);
-
-            wheelInfo.set_m_suspensionStiffness(20.0);
-            wheelInfo.set_m_wheelsDampingRelaxation(2.3);
-            wheelInfo.set_m_wheelsDampingCompression(4.4);
-            wheelInfo.set_m_frictionSlip(1000);
-            wheelInfo.set_m_rollInfluence(0.2);
-
-
-            return wheelMesh;
+        function initPhysics() {
+            collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
+            dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
+            broadphase = new Ammo.btDbvtBroadphase();
+            solver = new Ammo.btSequentialImpulseConstraintSolver();
+            physicsWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+            physicsWorld.setGravity(new Ammo.btVector3(0, -9.82, 0));
         }
 
-        function createVehicle() {
-            const position = {
-                x: -20,
-                y: 15,
-                z: 0
+        function update() {
+            renderer.render(scene, camera);
+
+            const delta = clock.getDelta();
+            for (var i = 0; i < syncList.length; i++) {
+                syncList[i](delta);
             }
-            const quat = ZERO_QUATERNION;
-            const tuning = new Ammo.btVehicleTuning();
-            const transform = new Ammo.btTransform();
-            transform.setIdentity();
-            transform.setOrigin(new Ammo.btVector3(position.x, position.y, position.z));
-            transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
+            physicsWorld.stepSimulation(delta, 10);
+            renderer.render(scene, camera);
 
-            const motionState = new Ammo.btDefaultMotionState(transform);
-
-            const localInertia = new Ammo.btVector3(0, 0, 0);
-
-            const chassisParams = {
-                height: 2 / 4,
-                width: 6 / 4,
-                length: 8 / 4
-            };
-
-            const ammoGeom = new Ammo.btBoxShape(
-                new Ammo.btVector3(
-                    chassisParams.width * .5,
-                    chassisParams.height * .5,
-                    chassisParams.length * .5
-                )
-            );
-            ammoGeom.calculateLocalInertia(800, localInertia);
-            const body = new Ammo.btRigidBody(new Ammo.btRigidBodyConstructionInfo(800, motionState, ammoGeom, localInertia));
-
-            body.setActivationState(4);
-            physicsWorld.addRigidBody(body);
-
-
-            const rayCaster = new Ammo.btDefaultVehicleRaycaster(physicsWorld);
-            const vehicle = new Ammo.btRaycastVehicle(tuning, body, rayCaster);
-            vehicle.setCoordinateSystem(0, 1, 2);
-            physicsWorld.addAction(vehicle);
-
-            const wheelParams = {
-                radius: 1 / 4,
-                height: 1 / 4,
-                tuning: tuning,
-                vehicle
-            };
-
-            const chassisMesh = createChassis(chassisParams);
-            chassisMesh.add(camera);
-
-            wheelParams.position = new Ammo.btVector3(chassisParams.width / 2 + 0.1, 0.2, chassisParams.length / 2);
-            wheelParams.isFront = true;
-            const wheel1 = createWheel(wheelParams);
-
-
-            wheelParams.position = new Ammo.btVector3(-(chassisParams.width / 2 + 0.1), 0.2, chassisParams.length / 2);
-            wheelParams.isFront = false;
-            const wheel2 = createWheel(wheelParams);
-
-
-            wheelParams.position = new Ammo.btVector3(chassisParams.width / 2 + 0.1, 0.2, -chassisParams.length / 2);
-            wheelParams.isFront = false;
-            const wheel3 = createWheel(wheelParams);
-
-            wheelParams.position = new Ammo.btVector3(-(chassisParams.width / 2 + 0.1), 0.2, -chassisParams.length / 2);
-            wheelParams.isFront = true;
-            const wheel4 = createWheel(wheelParams);
-
-
-            chassisMesh.position.set(position.x, position.y, position.z);
-
-            const wheelMeshes = [];
-            wheelMeshes.push(wheel1, wheel4, wheel3, wheel2);
-
-            let vehicleSteering = 0;
-            // const lookAtObj = new THREE.Object();
-            // scene.add(lookAtObj);
-
-            syncList.push(function () {
-                if (window.shouldUpdate === false) {
-                    return;
-                }
-
-                if (keyboard.camera.justPressed()) {
-                    cameraState = ++cameraState % 6;
-                }
-
-                const tails = [chassisMesh.getObjectByName("bl"), chassisMesh.getObjectByName("br")];
-                for (const tail of tails) {
-                    const light = tail.getObjectByName("light");
-                    const mesh = tail.getObjectByName("mesh");
-                    if (keyboard.backward.isDown() || keyboard.brake.isDown()) {
-                        if (!light.visible) {
-                            light.visible = true;
-                            mesh.material.emissive = VehicleLights.REAR_ON;
-                        }
-                    } else {
-                        if (light.visible) {
-                            light.visible = false;
-                            mesh.material.emissive = VehicleLights.OFF;
-                        }
-                    }
-                }
-
-                if (keyboard.headlight.justPressed()) {
-                    const heads = [chassisMesh.getObjectByName("fl"), chassisMesh.getObjectByName("fr")];
-                    for (const head of heads) {
-                        const light = head.getObjectByName("light");
-                        const mesh = head.getObjectByName("mesh");
-
-                        light.visible = !light.visible;
-                        mesh.material.emissive = light.visible ? VehicleLights.FRONT_ON : VehicleLights.OFF;
-                    }
-                }
-
-                const maxForce = 1500;
-                const speed = vehicle.getCurrentSpeedKmHour();
-                let force = 0;
-                let brakingForce = 0;
-
-                if (keyboard.forward.isDown()) {
-                    force = maxForce;
-                    if (speed < 0) {
-                        brakingForce = 100;
-                    }
-                }
-
-                if (keyboard.backward.isDown()) {
-                    if (speed < 0) {
-                        force = -maxForce;
-                    } else {
-                        force = -maxForce;
-                        brakingForce = 100;
-                    }
-                }
-
-                if (keyboard.left.isDown()) {
-                    vehicleSteering += 0.001;
-                } else if (keyboard.right.isDown()) {
-                    vehicleSteering -= 0.001;
-                } else {
-                    vehicleSteering = 0;
-                }
-
-                if (keyboard.brake.isDown()) {
-                    if (force > 0) {
-                        force = -maxForce;
-                        brakingForce = 50;
-                    } else {
-                        force = maxForce;
-                        brakingForce = 50;
-                    }
-                }
-
-                if (Math.abs(vehicleSteering) > 0.5) {
-                    vehicleSteering = 0.5 * Math.sign(vehicleSteering);
-                }
-
-                if (speed > 100) {
-                    force = 0;
-                }
-
-                vehicle.applyEngineForce(force, 1);
-                vehicle.applyEngineForce(force, 0);
-
-                vehicle.setBrake(brakingForce / 2, 0);
-                vehicle.setBrake(brakingForce / 2, 1);
-                vehicle.setBrake(brakingForce, 2);
-                vehicle.setBrake(brakingForce, 3);
-
-                vehicle.setSteeringValue(vehicleSteering, 0);
-                vehicle.setSteeringValue(vehicleSteering, 1);
-
-                for (i = 0; i < 4; i++) {
-                    vehicle.updateWheelTransform(i, true);
-                    const wheelTransform = vehicle.getWheelTransformWS(i);
-                    const wheelPosition = wheelTransform.getOrigin();
-                    const wheelRotation = wheelTransform.getRotation();
-                    wheelMeshes[i].position.set(wheelPosition.x(), wheelPosition.y(), wheelPosition.z());
-                    wheelMeshes[i].quaternion.set(wheelRotation.x(), wheelRotation.y(), wheelRotation.z(), wheelRotation.w());
-                }
-
-                const vehicleTransform = vehicle.getChassisWorldTransform();
-                const position = vehicleTransform.getOrigin();
-                const rotation = vehicleTransform.getRotation();
-
-
-                let quaternion = new THREE.Quaternion(rotation.x(), rotation.y(), rotation.z(), rotation.w());
-                const degrees = new THREE.Euler().setFromQuaternion(quaternion);
-
-                const pos = new THREE.Vector3(position.x(), position.y(), position.z());
-                pos.applyQuaternion(quaternion);
-
-
-                // console.log(degrees.y, degrees.x);
-                // if (Math.abs(degrees.x) < 3) {
-                //     camera.position.set(
-                //         position.x() + Math.abs(Math.sin(degrees.y) * 3),
-                //         position.y(),
-                //         position.z() + Math.abs(Math.cos(degrees.y) * 3)
-                //     );
-                // } else {
-                //     camera.position.set(
-                //         position.x() + Math.abs(Math.sin(degrees.y + Math.PI / 2) * 3),
-                //         position.y(),
-                //         position.z() + Math.abs(Math.cos(degrees.y + Math.PI / 2) * 3)
-                //     );
-                // }
-
-                function toggleHeadlightVisibility(state) {
-                    const heads = [chassisMesh.getObjectByName("fl"), chassisMesh.getObjectByName("fr")];
-                    for (const head of heads) {
-                        const mesh = head.getObjectByName("mesh");
-                        mesh.visible = state;
-                    }
-                }
-
-                if (cameraState == 0) {
-                    camera.position.set(0, 2, -10);
-                    camera.rotation.set(0, Math.PI, 0);
-                } else if (cameraState == 1) {
-                    camera.position.set(0, 0, 0);
-                    camera.rotation.set(0, Math.PI, 0);
-                    toggleHeadlightVisibility(false);
-                } else if (cameraState == 2) {
-                    camera.position.set(0, 0, 0);
-                    camera.rotation.set(0, 0, 0);
-                    toggleHeadlightVisibility(true);
-                } else if (cameraState == 3) {
-                    camera.position.set(0, 2, 10);
-                    camera.rotation.set(0, 0, 0);
-                } else if (cameraState == 4) {
-                    camera.position.set(10, 10, 0);
-                    camera.lookAt(0, 0, 0);
-                } else {
-                    // Letting OrbitControl take over
-                }
-
-                chassisMesh.position.set(position.x(), position.y(), position.z());
-                chassisMesh.quaternion.set(rotation.x(), rotation.y(), rotation.z(), rotation.w());
-
-                let speedFixed = speed.toFixed(2);
-                carSpeed = speedFixed;
-
-                // const cameraOffset = new THREE.Vector3(0.0, 5.0, -5.0); // NOTE Constant offset between the camera and the target
-
-                // const objectPosition = new THREE.Vector3();
-                // chassisMesh.getWorldPosition(objectPosition);
-
-                // camera.position.copy(objectPosition).add(cameraOffset);
-
-            });
-
-            return chassisMesh;
-        }
-
-        function makeTrack(material, brickMaterial) {
-            createRigidObject(new THREE.Vector3(0, 0, 0), ZERO_QUATERNION, { height: 20, radius: 25, material: [new THREE.MeshPhongMaterial({ color: 0xfca400 }), material, new THREE.MeshPhongMaterial({ color: 0xfca400 })] }, 0, 2);
-            createRigidObject(
-                new THREE.Vector3(0, 0, 20),
-                ZERO_QUATERNION,
-                {
-                    height: 40,
-                    width: 50,
-                    length: 20,
-                    material: [
-                        new THREE.MeshPhongMaterial({ color: 0xfca400 }),
-                        new THREE.MeshPhongMaterial({ color: 0xfca400 }),
-                        material,
-                        new THREE.MeshPhongMaterial({ color: 0xfca400 }),
-                        new THREE.MeshPhongMaterial({ color: 0xfca400 }),
-                        new THREE.MeshPhongMaterial({ color: 0xfca400 }),
-                        new THREE.MeshPhongMaterial({ color: 0xfca400 }),
-                    ]
-                }, 0, 2, true);
-
-
-            createRigidObject(
-                new THREE.Vector3(0, 0, 40),
-                ZERO_QUATERNION,
-                {
-                    height: 20,
-                    radius: 25,
-                    material: [
-                        new THREE.MeshPhongMaterial({ color: 0xfca400 }),
-                        material,
-                        new THREE.MeshPhongMaterial({ color: 0xfca400 })
-                    ]
-                }, 0, 2);
-
-
-            createRigidObject(
-                new THREE.Vector3(0, 10, 0),
-                ZERO_QUATERNION,
-                {
-                    height: 10,
-                    radius: 13,
-                    material: new THREE.MeshPhongMaterial({ color: 0xfca400 }),
-                    // [
-                    //     brickMaterial,
-                    //     brickMaterial
-                    // ]
-                }, 0, 2, false, 0xff0000);
-
-            createRigidObject(
-                new THREE.Vector3(0, 10, 20),
-                ZERO_QUATERNION,
-                {
-                    height: 40,
-                    width: 26,
-                    length: 10,
-                    material: new THREE.MeshPhongMaterial({ color: 0xfca400 }),
-                    // [
-                    //     brickMaterial,
-                    //     brickMaterial,
-                    //     brickMaterial,
-                    // ]
-                }, 0, 2, true, 0xff0000);
-
-            createRigidObject(
-                new THREE.Vector3(0, 10, 40),
-                ZERO_QUATERNION,
-                {
-                    height: 10,
-                    radius: 13,
-                    material: new THREE.MeshPhongMaterial({ color: 0xfca400 }),
-                    // [
-                    //     brickMaterial,
-                    //     brickMaterial
-                    // ]
-                }, 0, 2, false, 0xff0000);
-        }
-
-        function generateHeight(width, depth, minHeight, maxHeight) {
-            const size = width * depth;
-            const data = new Float32Array(size);
-
-            const hRange = maxHeight - minHeight;
-            const w2 = width / 2;
-            const d2 = depth / 2;
-            const phaseMult = 12;
-
-            let index = 0;
-            for (var j = 0; j < depth; j++) {
-                for (var i = 0; i < width; i++) {
-
-                    const radius = Math.sqrt(
-                        Math.pow((i - w2) / w2, 2.0) +
-                        Math.pow((j - d2) / d2, 2.0));
-
-                    data[index] = Math.sin(radius * 3) * 20;
-
-                    index++;
-                }
-            }
-            return data;
-        }
-
-        function createTerrainShape(terrainWidth, terrainDepth, heightData) {
-            const heightScale = 1;
-            const upAxis = 1;
-            const hdt = "PHY_FLOAT";
-            const flipQuadEdges = false;
-            const ammoHeightData = Ammo._malloc(4 * terrainWidth * terrainDepth);
-            let p = 0;
-            let p2 = 0;
-
-            for (let j = 0; j < terrainDepth; j++) {
-                for (let i = 0; i < terrainWidth; i++) {
-                    Ammo.HEAPF32[ammoHeightData + p2 >> 2] = heightData[p];
-                    p++;
-                    p2 += 4;
-                }
-            }
-
-            const heightFieldShape = new Ammo.btHeightfieldTerrainShape(
-                terrainWidth,
-                terrainDepth,
-                ammoHeightData,
-                heightScale,
-                0,
-                30,
-                upAxis,
-                hdt,
-                flipQuadEdges
-            );
-
-            const scaleX = 1000 / (terrainWidth - 1);
-            const scaleZ = 1000 / (terrainDepth - 1);
-            heightFieldShape.setLocalScaling(new Ammo.btVector3(scaleX, 1, scaleZ));
-            heightFieldShape.setMargin(0.05);
-
-            return heightFieldShape;
-        }
-
-        function makeTerrain(material) {
-
-            const terrainWidth = 1000;
-            const terrainDepth = 1000;
-
-            const heightData = generateHeight(1000, 1000, 100, 100);
-
-            const ammoTerrain = createTerrainShape(terrainWidth, terrainDepth, heightData);
-            const terrainTransform = new Ammo.btTransform();
-            terrainTransform.setIdentity();
-            terrainTransform.setOrigin(new Ammo.btVector3(0, 15, 20));
-
-            const groundBody = new Ammo.btRigidBody(
-                new Ammo.btRigidBodyConstructionInfo(
-                    0,
-                    new Ammo.btDefaultMotionState(terrainTransform),
-                    ammoTerrain,
-                    new Ammo.btVector3(0, 0, 0)
-                )
-            );
-            physicsWorld.addRigidBody(groundBody);
-
-            const geometry = new THREE.PlaneBufferGeometry(terrainWidth, terrainDepth, 1000 - 1, 1000 - 1);
-            geometry.rotateX(- Math.PI / 2);
-            const vertices = geometry.attributes.position.array;
-            for (let i = 0, j = 0, l = vertices.length; i < l; i++, j += 3) {
-                vertices[j + 1] = heightData[i];
-            }
-
-            const groundMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00, side: THREE.DoubleSide });
-            terrainMesh = new THREE.Mesh(geometry, material);
-            terrainMesh.position.set(0, 0, 20);
-
-            return terrainMesh;
-        }
-
-        function createRigidObject(pos, quat, params, mass, friction, isBox = false, color = 0x919691) {
-            const material = mass > 0 ? materialDynamic : materialStatic;
-            let shape, geometry;
-            if (isBox) {
-                const w = params.width;
-                const l = params.length;
-                const h = params.height;
-                shape = new THREE.BoxGeometry(w, l, h, 1, 1, 1);
-                geometry = new Ammo.btBoxShape(new Ammo.btVector3(w * 0.5, l * 0.5, h * 0.5));
-            } else {
-                const radius = params.radius;
-                const height = params.height;
-                shape = new THREE.CylinderGeometry(radius, radius, height, 100, 1);
-                geometry = new Ammo.btCylinderShape(new Ammo.btVector3(radius, height * 0.5, radius));
-            }
-            if (!mass) mass = 0;
-            if (!friction) friction = 1;
-
-            const mesh = new THREE.Mesh(shape, params.material ? params.material : new THREE.MeshPhongMaterial({ color }));
-            mesh.position.copy(pos);
-            mesh.quaternion.copy(quat);
-            scene.add(mesh);
-
-            const transform = new Ammo.btTransform();
-            transform.setIdentity();
-            transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-            transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
-
-            const motionState = new Ammo.btDefaultMotionState(transform);
-            const localInertia = new Ammo.btVector3(0, 0, 0);
-            geometry.calculateLocalInertia(mass, localInertia);
-
-            const rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, geometry, localInertia);
-            const body = new Ammo.btRigidBody(rbInfo);
-
-            body.setFriction(friction);
-            body.setRestitution(.9);
-            body.setDamping(0.2, 0.2);
-
-            physicsWorld.addRigidBody(body);
-
-            if (mass > 0) {
-                body.setActivationState(DISABLE_DEACTIVATION);
-
-                function sync(dt) {
-                    const ms = body.getMotionState();
-                    if (ms) {
-                        ms.getWorldTransform(TRANSFORM_AUX);
-                        const p = TRANSFORM_AUX.getOrigin();
-                        const q = TRANSFORM_AUX.getRotation();
-                        mesh.position.set(p.x(), p.y(), p.z());
-                        mesh.quaternion.set(q.x(), q.y(), q.z(), q.w());
-                    }
-                }
-
-                syncList.push(sync);
-            }
+            requestAnimationFrame(update);
         }
 
         function init(Ammo) {
 
-            function initPhysics() {
-                collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
-                dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
-                broadphase = new Ammo.btDbvtBroadphase();
-                solver = new Ammo.btSequentialImpulseConstraintSolver();
-                physicsWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-                physicsWorld.setGravity(new Ammo.btVector3(0, -9.82, 0));
-            }
-
-            function update() {
-                renderer.render(scene, camera);
-
-                const delta = clock.getDelta();
-                for (var i = 0; i < syncList.length; i++) {
-                    syncList[i](delta);
-                }
-                physicsWorld.stepSimulation(delta, 10);
-                // controls.update(delta);
-                renderer.render(scene, camera);
-
-                requestAnimationFrame(update);
-            }
-
-            function createObjectMaterial() {
-                var c = Math.floor(Math.random() * (1 << 24));
-                return new THREE.MeshPhongMaterial({ color: c });
-            }
-
-
             initPhysics();
 
-
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.02, 2000);
+            camera = new THREE.PerspectiveCamera(
+                60,
+                window.innerWidth / window.innerHeight,
+                0.02,
+                2000
+            );
             scene = new THREE.Scene();
+            renderer = new THREE.WebGLRenderer();
+
+            const controls = new THREE.OrbitControls(camera);
+            const ambientLight = new THREE.AmbientLight(0x204040);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+
 
             camera.position.y = 2;
             camera.position.z = -10;
-
             camera.rotation.y = Math.PI;
 
-
-            const controls = new THREE.OrbitControls(camera);
-            // controls.update(0.1);
-
-            const ambientLight = new THREE.AmbientLight(0x204040);
-            scene.add(ambientLight);
-
-            const dirLight = new THREE.DirectionalLight(0xffffff, 1);
             dirLight.position.set(10, 10, 5);
-            scene.add(dirLight);
 
-            renderer = new THREE.WebGLRenderer();
             renderer.setClearColor(0xbfd1e5);
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
-
             renderer.render(scene, camera);
-
             container.appendChild(renderer.domElement);
 
-            const loader = new THREE.TextureLoader();
-
-            loader.load(
-                'https://i.imgur.com/7PbdSdY.jpg',
-                function (texture) {
-                    texture.wrapS = THREE.RepeatWrapping;
-                    texture.wrapT = THREE.RepeatWrapping;
-                    texture.repeat.set(40, 40);
-                    const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, side: THREE.DoubleSide, map: texture });
-
-                    scene.add(makeTerrain(material));
-
-                },
-                undefined,
-                function (err) {
-                    console.error('An error happened.');
+            const terrainTexture = assetLoader(
+                "https://i.imgur.com/7PbdSdY.jpg",
+                {
+                    wrapS: THREE.RepeatWrapping,
+                    wrapT: THREE.RepeatWrapping,
+                    repeat: {
+                        U: 400,
+                        V: 400
+                    },
                 }
             );
 
+            const roadTexture = assetLoader(
+                "https://t4.ftcdn.net/jpg/02/86/45/25/360_F_286452528_dnDH3uUUQUGQ7EsxZ9Ky1YXsH1kPVj4y.jpg",
+                {
+                    wrapS: THREE.RepeatWrapping,
+                    wrapT: THREE.RepeatWrapping,
+                    repeat: {
+                        U: 10,
+                        V: 10
+                    },
+                }
+            );
 
-            const roadTexture = loader.load("https://t4.ftcdn.net/jpg/02/86/45/25/360_F_286452528_dnDH3uUUQUGQ7EsxZ9Ky1YXsH1kPVj4y.jpg");
-            const brickTexture = loader.load("https://i.imgur.com/7rTGpUi.jpeg");
-            roadTexture.wrapS = THREE.RepeatWrapping;
-            roadTexture.wrapT = THREE.RepeatWrapping;
-            roadTexture.repeat.set(10, 10);
+            const brickTexture = assetLoader(
+                "https://i.imgur.com/7rTGpUi.jpeg",
+                {
+                    wrapS: THREE.RepeatWrapping,
+                    wrapT: THREE.RepeatWrapping,
+                    repeat: {
+                        U: 10,
+                        V: 4
+                    },
+                }
+            );
 
+            const roadMaterial = new THREE.MeshPhongMaterial({
+                side: THREE.DoubleSide,
+                map: roadTexture
+            });
 
-            brickTexture.wrapS = THREE.RepeatWrapping;
-            brickTexture.wrapT = THREE.RepeatWrapping;
-            brickTexture.repeat.set(10, 4);
+            const brickMaterial = new THREE.MeshPhongMaterial({
+                side: THREE.DoubleSide,
+                map: brickTexture
+            });
 
-            const material = new THREE.MeshPhongMaterial({ side: THREE.DoubleSide, map: roadTexture });
-            const brickMaterial = new THREE.MeshPhongMaterial({ side: THREE.DoubleSide, map: brickTexture });
-            makeTrack(material, brickMaterial)
+            const terrainMaterial = new THREE.MeshPhongMaterial({
+                side: THREE.DoubleSide,
+                map: terrainTexture
+            });
 
-            createVehicle();
+            scene.add(makeTerrain(terrainMaterial));
+            makeTrack(roadMaterial, brickMaterial);
+            new AmmoCar(syncList, physicsWorld, keyboard);
+            scene.add(ambientLight);
+            scene.add(dirLight);
 
             update();
+
+            window.setInterval(function () {
+                document.getElementById("speed").innerHTML = carSpeed;
+            }, 50);
         }
+
+        Ammo().then((Ammo) => init(Ammo));
+
     </script>
 
     <div id="controls">
