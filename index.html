@@ -291,11 +291,15 @@ POSSIBLE TODO IDEAS:
                     const light = tail.getObjectByName("light");
                     const mesh = tail.getObjectByName("mesh");
                     if (keyState.s || keyState.space) {
-                        light.visible = true;
-                        mesh.material.emissive = VehicleLights.REAR_ON;
+                        if (!light.visible) {
+                            light.visible = true;
+                            mesh.material.emissive = VehicleLights.REAR_ON;
+                        }
                     } else {
-                        light.visible = false;
-                        mesh.material.emissive = VehicleLights.OFF;
+                        if (light.visible) {
+                            light.visible = false;
+                            mesh.material.emissive = VehicleLights.OFF;
+                        }
                     }
                 }
 
