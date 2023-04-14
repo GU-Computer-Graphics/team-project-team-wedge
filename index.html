@@ -61,6 +61,7 @@ POSSIBLE TODO IDEAS:
     <script>
         const VehicleLights = {
             OFF: new THREE.Color("black"),
+            FRONT_ON: new THREE.Color("orange"),
             REAR_ON: new THREE.Color("brown"),
         };
 
@@ -109,6 +110,7 @@ POSSIBLE TODO IDEAS:
                     right: "KeyD",
                     brake: "Space",
                     camera: "KeyC",
+                    headlight: "KeyL",
                 };
 
                 for (const [k, v] of Object.entries(keyCodes)) {
@@ -201,6 +203,8 @@ POSSIBLE TODO IDEAS:
                 chassis,
                 makeLight({ roll: +1, pitch: -1 }, VehicleLights.REAR_ON, "bl"),
                 makeLight({ roll: -1, pitch: -1 }, VehicleLights.REAR_ON, "br"),
+                makeLight({ roll: +1, pitch: +1 }, VehicleLights.FRONT_ON, "fl"),
+                makeLight({ roll: -1, pitch: +1 }, VehicleLights.FRONT_ON, "fr"),
             );
 
             scene.add(composite);
@@ -338,6 +342,17 @@ POSSIBLE TODO IDEAS:
                             light.visible = false;
                             mesh.material.emissive = VehicleLights.OFF;
                         }
+                    }
+                }
+
+                if (keyboard.headlight.justPressed()) {
+                    const heads = [chassisMesh.getObjectByName("fl"), chassisMesh.getObjectByName("fr")];
+                    for (const head of heads) {
+                        const light = head.getObjectByName("light");
+                        const mesh = head.getObjectByName("mesh");
+
+                        light.visible = !light.visible;
+                        mesh.material.emissive = light.visible ? VehicleLights.FRONT_ON : VehicleLights.OFF;
                     }
                 }
 
@@ -815,6 +830,7 @@ POSSIBLE TODO IDEAS:
         <li>S : decelerate / reverse</li>
         <li>A : turn left </li>
         <li>D : turn right </li>
+        <li>L : headlights </li>
         <li>SPACE : handbrake </li>
     </div>
 
