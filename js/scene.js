@@ -299,7 +299,6 @@ function makeTerrain(material) {
 }
 
 function addClouds(cloudTexture) {
-    return;
     const cloudObject = new THREE.Object3D();
     const cloudMaterial = new THREE.MeshBasicMaterial({
         color: 0xffffff,
@@ -318,7 +317,7 @@ function addClouds(cloudTexture) {
         plane.rotation.x = Math.PI / 2;
 
         plane.lookAt(0, 0, 0);
-        plane.scale.x = plane.scale.y = Math.random() * Math.random();
+        plane.scale.x = plane.scale.y = Math.random() * Math.random() + 0.3;
         plane.renderOrder= i ;
         cloudObject.add(plane);
 
