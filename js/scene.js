@@ -131,6 +131,18 @@ function createTree(sizeParams, position) {
         -500 + position.z
     );
 
+    createRigidObject(
+        new THREE.Vector3(
+            -500 + position.x,
+            position.y + sizeParams.height / 2,
+            -500 + position.z
+        ),
+        ZERO_QUATERNION,
+        {
+            height: sizeParams.height,
+            radius: sizeParams.radius,
+        }, 0, 2, false, 0xff0000);
+
     scene.add(treeObj);
 }
 
@@ -242,10 +254,12 @@ function createRigidObject(pos, quat, params, mass, friction, isBox = false, col
     if (!mass) mass = 0;
     if (!friction) friction = 1;
 
-    const mesh = new THREE.Mesh(shape, params.material ? params.material : new THREE.MeshPhongMaterial({ color }));
-    mesh.position.copy(pos);
-    mesh.quaternion.copy(quat);
-    scene.add(mesh);
+    if (params.shouldAddMesh !== false) {
+        const mesh = new THREE.Mesh(shape, params.material ? params.material : new THREE.MeshPhongMaterial({ color }));
+        mesh.position.copy(pos);
+        mesh.quaternion.copy(quat);
+        scene.add(mesh);
+    }
 
     const transform = new Ammo.btTransform();
     transform.setIdentity();
