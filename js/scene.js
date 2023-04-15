@@ -1,3 +1,5 @@
+let heightData;
+
 function makeTrack(material, brickMaterial) {
     createRigidObject(new THREE.Vector3(0, 0, 0), ZERO_QUATERNION, { height: 20, radius: 25, material: [new THREE.MeshPhongMaterial({ color: 0xfca400 }), material, new THREE.MeshPhongMaterial({ color: 0xfca400 })] }, 0, 2);
     createRigidObject(
@@ -100,6 +102,38 @@ function generateHeight(width, depth, minHeight, maxHeight) {
     return data;
 }
 
+function createTree(sizeParams, position) {
+
+    const treeObj = new THREE.Object3D();
+    const trunkGeometry = new THREE.CylinderGeometry(
+        sizeParams.radius,
+        sizeParams.radius,
+        sizeParams.height,
+        sizeParams.segments
+    );
+    const trunkMaterial = new THREE.MeshPhongMaterial({ color: 0x964B00 });
+    const trunkMesh = new THREE.Mesh(trunkGeometry, trunkMaterial);
+    const geometry = new THREE.CylinderGeometry(0, sizeParams.radius * 4, 20, sizeParams.segments);
+    const material = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+    const treeTop = new THREE.Mesh(geometry, material);
+
+    position.x = position.x;
+    position.z = position.z;
+    position.y = heightData[position.x * 1000 + position.z];
+
+    treeObj.add(trunkMesh);
+    treeObj.add(treeTop);
+
+    treeTop.position.set(0, 10, 0);
+    treeObj.position.set(
+        -500 + position.x,
+        position.y + sizeParams.height / 2,
+        -500 + position.z
+    );
+
+    scene.add(treeObj);
+}
+
 function createTerrainShape(terrainWidth, terrainDepth, heightData) {
     const heightScale = 1;
     const upAxis = 1;
@@ -139,15 +173,13 @@ function createTerrainShape(terrainWidth, terrainDepth, heightData) {
 
 function makeTerrain(material) {
 
+    heightData = generateHeight(1000, 1000, 100, 100);
     const terrainWidth = 1000;
     const terrainDepth = 1000;
-
-    const heightData = generateHeight(1000, 1000, 100, 100);
-
     const ammoTerrain = createTerrainShape(terrainWidth, terrainDepth, heightData);
     const terrainTransform = new Ammo.btTransform();
     terrainTransform.setIdentity();
-    terrainTransform.setOrigin(new Ammo.btVector3(0, 15, 20));
+    terrainTransform.setOrigin(new Ammo.btVector3(0, 15, 0));
 
     const groundBody = new Ammo.btRigidBody(
         new Ammo.btRigidBodyConstructionInfo(
@@ -166,10 +198,30 @@ function makeTerrain(material) {
         vertices[j + 1] = heightData[i];
     }
 
-    const groundMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00, side: THREE.DoubleSide });
     terrainMesh = new THREE.Mesh(geometry, material);
-    terrainMesh.position.set(0, 0, 20);
+    terrainMesh.position.set(0, 0, 0);
 
+
+    for (let i = 0; i < 100; i++) {
+        const radius = 100 + Math.floor(Math.random() * 400);
+        const theta = 0 + Math.random() * Math.PI * 2;
+
+        const shouldAdd = true;
+        if (shouldAdd) {
+            createTree(
+                {
+                    radius: 1,
+                    height: 10,
+                    segments: 6
+                },
+                new THREE.Vector3(
+                    500 + Math.floor(radius * Math.sin(theta)),
+                    0,
+                    500 + Math.floor(radius * Math.cos(theta))
+                )
+            );
+        }
+    }
     return terrainMesh;
 }
 

@@ -75,6 +75,7 @@ POSSIBLE TODO IDEAS:
         const clock = new THREE.Clock();
         const syncList = [];
         const dynamicObjects = [];
+        const stats = new Stats();
 
         const KeyStates = {
             UP: 0,
@@ -109,7 +110,7 @@ POSSIBLE TODO IDEAS:
         }
 
         function update() {
-            renderer.render(scene, camera);
+            stats.begin();
 
             const delta = clock.getDelta();
             for (var i = 0; i < syncList.length; i++) {
@@ -118,6 +119,8 @@ POSSIBLE TODO IDEAS:
             physicsWorld.stepSimulation(delta, 10);
             renderer.render(scene, camera);
 
+
+            stats.end();
             requestAnimationFrame(update);
         }
 
@@ -213,6 +216,9 @@ POSSIBLE TODO IDEAS:
             window.setInterval(function () {
                 document.getElementById("speed").innerHTML = carSpeed;
             }, 50);
+
+            stats.showPanel(1);
+            document.body.appendChild(stats.dom);
         }
 
         Ammo().then((Ammo) => init(Ammo));
