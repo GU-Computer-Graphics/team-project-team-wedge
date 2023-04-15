@@ -1,5 +1,66 @@
 let heightData;
 
+
+function createRigidObject(pos, quat, params, mass, friction, isBox = false, color = 0x919691) {
+    let shape, geometry;
+    if (isBox) {
+        const w = params.width;
+        const l = params.length;
+        const h = params.height;
+        shape = new THREE.BoxGeometry(w, l, h, 1, 1, 1);
+        geometry = new Ammo.btBoxShape(new Ammo.btVector3(w * 0.5, l * 0.5, h * 0.5));
+    } else {
+        const radius = params.radius;
+        const height = params.height;
+        shape = new THREE.CylinderGeometry(radius, radius, height, 100, 1);
+        geometry = new Ammo.btCylinderShape(new Ammo.btVector3(radius, height * 0.5, radius));
+    }
+    if (!mass) mass = 0;
+    if (!friction) friction = 1;
+
+    if (params.shouldAddMesh !== false) {
+        const mesh = new THREE.Mesh(shape, params.material ? params.material : new THREE.MeshPhongMaterial({ color }));
+        mesh.position.copy(pos);
+        mesh.quaternion.copy(quat);
+        scene.add(mesh);
+    }
+
+    const transform = new Ammo.btTransform();
+    transform.setIdentity();
+    transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+    transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
+
+    const motionState = new Ammo.btDefaultMotionState(transform);
+    const localInertia = new Ammo.btVector3(0, 0, 0);
+    geometry.calculateLocalInertia(mass, localInertia);
+
+    const rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, geometry, localInertia);
+    const body = new Ammo.btRigidBody(rbInfo);
+
+    body.setFriction(friction);
+    body.setRestitution(.9);
+    body.setDamping(0.2, 0.2);
+
+    physicsWorld.addRigidBody(body);
+
+    if (mass > 0) {
+        body.setActivationState(DISABLE_DEACTIVATION);
+
+        function sync(dt) {
+            const ms = body.getMotionState();
+            if (ms) {
+                ms.getWorldTransform(TRANSFORM_AUX);
+                const p = TRANSFORM_AUX.getOrigin();
+                const q = TRANSFORM_AUX.getRotation();
+                mesh.position.set(p.x(), p.y(), p.z());
+                mesh.quaternion.set(q.x(), q.y(), q.z(), q.w());
+            }
+        }
+
+        syncList.push(sync);
+    }
+}
+
 function makeTrack(material, brickMaterial) {
     createRigidObject(new THREE.Vector3(0, 0, 0), ZERO_QUATERNION, { height: 20, radius: 25, material: [new THREE.MeshPhongMaterial({ color: 0xfca400 }), material, new THREE.MeshPhongMaterial({ color: 0xfca400 })] }, 0, 2);
     createRigidObject(
@@ -237,62 +298,36 @@ function makeTerrain(material) {
     return terrainMesh;
 }
 
-function createRigidObject(pos, quat, params, mass, friction, isBox = false, color = 0x919691) {
-    let shape, geometry;
-    if (isBox) {
-        const w = params.width;
-        const l = params.length;
-        const h = params.height;
-        shape = new THREE.BoxGeometry(w, l, h, 1, 1, 1);
-        geometry = new Ammo.btBoxShape(new Ammo.btVector3(w * 0.5, l * 0.5, h * 0.5));
-    } else {
-        const radius = params.radius;
-        const height = params.height;
-        shape = new THREE.CylinderGeometry(radius, radius, height, 100, 1);
-        geometry = new Ammo.btCylinderShape(new Ammo.btVector3(radius, height * 0.5, radius));
+function addClouds(cloudTexture) {
+    return;
+    const cloudObject = new THREE.Object3D();
+    const cloudMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+    });
+
+    // Sphere parametric equation: [sin(u)*cos(v), sin(u)*sin(v), cos(u)]
+    for (let i = 0; i < 40; i++) {
+        // Making sure the clouds don't clip
+        const radius = 200 + 300 * Math.random();
+        const u = Math.PI * Math.random();
+        const v = Math.PI * Math.random();
+        const plane = new THREE.Mesh(new THREE.PlaneGeometry(64, 64, 1, 1), cloudMaterial);
+        plane.position.x = radius * Math.sin(u) * Math.cos(v);
+        plane.position.y = radius * Math.sin(u) * Math.sin(v);
+        plane.position.z = radius * Math.cos(u);
+        plane.rotation.x = Math.PI / 2;
+
+        plane.lookAt(0, 0, 0);
+        plane.scale.x = plane.scale.y = Math.random() * Math.random();
+        plane.renderOrder= i ;
+        cloudObject.add(plane);
+
     }
-    if (!mass) mass = 0;
-    if (!friction) friction = 1;
 
-    if (params.shouldAddMesh !== false) {
-        const mesh = new THREE.Mesh(shape, params.material ? params.material : new THREE.MeshPhongMaterial({ color }));
-        mesh.position.copy(pos);
-        mesh.quaternion.copy(quat);
-        scene.add(mesh);
-    }
+    // cloudObject.rotation.x = Math.PI / 2;
+    cloudObject.position.y = 100;
 
-    const transform = new Ammo.btTransform();
-    transform.setIdentity();
-    transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-    transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
+    // cloudObject.add(mesh);
+    scene.add(cloudObject);
 
-    const motionState = new Ammo.btDefaultMotionState(transform);
-    const localInertia = new Ammo.btVector3(0, 0, 0);
-    geometry.calculateLocalInertia(mass, localInertia);
-
-    const rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, geometry, localInertia);
-    const body = new Ammo.btRigidBody(rbInfo);
-
-    body.setFriction(friction);
-    body.setRestitution(.9);
-    body.setDamping(0.2, 0.2);
-
-    physicsWorld.addRigidBody(body);
-
-    if (mass > 0) {
-        body.setActivationState(DISABLE_DEACTIVATION);
-
-        function sync(dt) {
-            const ms = body.getMotionState();
-            if (ms) {
-                ms.getWorldTransform(TRANSFORM_AUX);
-                const p = TRANSFORM_AUX.getOrigin();
-                const q = TRANSFORM_AUX.getRotation();
-                mesh.position.set(p.x(), p.y(), p.z());
-                mesh.quaternion.set(q.x(), q.y(), q.z(), q.w());
-            }
-        }
-
-        syncList.push(sync);
-    }
 }

@@ -148,7 +148,7 @@ POSSIBLE TODO IDEAS:
 
             dirLight.position.set(10, 10, 5);
 
-            renderer.setClearColor(0xbfd1e5);
+            renderer.setClearColor(0x87CEEB);
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.render(scene, camera);
@@ -190,6 +190,18 @@ POSSIBLE TODO IDEAS:
                 }
             );
 
+            const cloudTexture = assetLoader(
+                "https://mrdoob.com/lab/javascript/webgl/clouds/cloud10.png",
+                {
+                    wrapS: THREE.RepeatWrapping,
+                    wrapT: THREE.RepeatWrapping,
+                    repeat: {
+                        U: 0,
+                        V: 0
+                    },
+                }
+            )
+
             const roadMaterial = new THREE.MeshPhongMaterial({
                 side: THREE.DoubleSide,
                 map: roadTexture
@@ -207,6 +219,7 @@ POSSIBLE TODO IDEAS:
 
             scene.add(makeTerrain(terrainMaterial));
             makeTrack(roadMaterial, brickMaterial);
+            addClouds(cloudTexture);
             new AmmoCar(syncList, physicsWorld, keyboard);
             scene.add(ambientLight);
             scene.add(dirLight);
