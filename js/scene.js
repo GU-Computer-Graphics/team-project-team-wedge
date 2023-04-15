@@ -214,8 +214,8 @@ function makeTerrain(material) {
     terrainMesh.position.set(0, 0, 0);
 
 
-    for (let i = 0; i < 100; i++) {
-        const radius = 100 + Math.floor(Math.random() * 400);
+    for (let i = 0; i < 300; i++) {
+        const radius = 75 + Math.floor(Math.random() * 425);
         const theta = 0 + Math.random() * Math.PI * 2;
 
         const shouldAdd = true;
