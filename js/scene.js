@@ -222,8 +222,8 @@ function makeTerrain(material) {
         if (shouldAdd) {
             createTree(
                 {
-                    radius: 1,
-                    height: 10,
+                    radius: 1 + Math.floor(Math.random() * 10) / 10,
+                    height: 10 + Math.floor(Math.random() * 10),
                     segments: 6
                 },
                 new THREE.Vector3(
