@@ -1,5 +1,5 @@
 let heightData;
-
+const maxTerrainHeight = 50;
 
 function createRigidObject(pos, quat, params, mass, friction, isBox = false, color = 0x919691) {
     let shape, geometry;
@@ -155,7 +155,7 @@ function generateHeight(width, depth, minHeight, maxHeight) {
                 Math.pow((i - w2) / w2, 2.0) +
                 Math.pow((j - d2) / d2, 2.0));
 
-            data[index] = Math.sin(radius * 3) * 20;
+            data[index] = Math.sin(radius * 3) * maxTerrainHeight;
 
             index++;
         }
@@ -230,7 +230,7 @@ function createTerrainShape(terrainWidth, terrainDepth, heightData) {
         ammoHeightData,
         heightScale,
         0,
-        30,
+        maxTerrainHeight,
         upAxis,
         hdt,
         flipQuadEdges
@@ -252,7 +252,7 @@ function makeTerrain(material) {
     const ammoTerrain = createTerrainShape(terrainWidth, terrainDepth, heightData);
     const terrainTransform = new Ammo.btTransform();
     terrainTransform.setIdentity();
-    terrainTransform.setOrigin(new Ammo.btVector3(0, 15, 0));
+    terrainTransform.setOrigin(new Ammo.btVector3(0, maxTerrainHeight / 2, 0));
 
     const groundBody = new Ammo.btRigidBody(
         new Ammo.btRigidBodyConstructionInfo(
