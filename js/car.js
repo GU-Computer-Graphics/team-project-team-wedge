@@ -91,7 +91,7 @@ class AmmoCar {
         wheelInfo.set_m_wheelsDampingRelaxation(2.3);
         wheelInfo.set_m_wheelsDampingCompression(4.4);
         wheelInfo.set_m_frictionSlip(1000);
-        wheelInfo.set_m_rollInfluence(0.2);
+        wheelInfo.set_m_rollInfluence(0);
     }
 
     createWheel(params, ammoPosition, isFront) {
@@ -161,7 +161,7 @@ class AmmoCar {
                 }
             }
 
-            const maxForce = 1500;
+            const maxForce = 3000;
             const speed = vehicle.getCurrentSpeedKmHour();
             let force = 0;
             let brakingForce = 0;
@@ -183,8 +183,10 @@ class AmmoCar {
             }
 
             if (keyboard.left.isDown()) {
+                vehicleSteering = Math.max(0, vehicleSteering);
                 vehicleSteering += 0.001;
             } else if (keyboard.right.isDown()) {
+                vehicleSteering = Math.min(0, vehicleSteering);
                 vehicleSteering -= 0.001;
             } else {
                 vehicleSteering = 0;
@@ -204,7 +206,7 @@ class AmmoCar {
                 vehicleSteering = 0.5 * Math.sign(vehicleSteering);
             }
 
-            if (speed > 100) {
+            if (speed > 120) {
                 force = 0;
             }
 
