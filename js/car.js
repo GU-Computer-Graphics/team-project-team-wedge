@@ -193,13 +193,7 @@ class AmmoCar {
             }
 
             if (keyboard.brake.isDown()) {
-                if (force > 0) {
-                    force = -maxForce;
-                    brakingForce = 50;
-                } else {
-                    force = maxForce;
-                    brakingForce = 50;
-                }
+                brakingForce = 100;
             }
 
             if (Math.abs(vehicleSteering) > 0.5) {
