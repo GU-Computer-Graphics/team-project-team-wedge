@@ -257,12 +257,12 @@ POSSIBLE TODO IDEAS:
 
         // NEW : WIP
         /*
-            FIXME: something is causing the dayState to flicker, independent of the actual state 
+            FIXME: something is causing the dayState to flicker, independent of the actual state
         */
         document.addEventListener('keydown', (event) => {
             console.log(event.key);
-            if((event.key = 'n')){
-                if(day) {   // swap to night
+            if ((event.key = 'n')) {
+                if (day) {   // swap to night
                     day = false;
                     //scene.remove(ambientLight);
                     //scene.remove(dirLight);
@@ -270,7 +270,7 @@ POSSIBLE TODO IDEAS:
                     dirLight = new THREE.DirectionalLight(0x0d0d0d, 1);
                     //scene.add(ambientLight);
                     //scene.add(dirLight);
-                } 
+                }
                 else { // swap to day
                     day = true;
                     //scene.remove(ambientLight);
