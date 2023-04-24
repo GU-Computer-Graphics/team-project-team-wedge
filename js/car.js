@@ -1,3 +1,12 @@
+const CameraStates = Object.fromEntries([
+    "THIRD_FOREWARD",
+    "FIRST_FOREWARD",
+    "FIRST_STERN",
+    "THIRD_STERN",
+    "THIRD_STARBOARD",
+    "THIRD_FREE",
+].map((x, i) => [x, i]));
+
 
 class AmmoCar {
     carPosition = {
@@ -132,7 +141,7 @@ class AmmoCar {
             }
 
             if (keyboard.camera.justPressed()) {
-                cameraState = ++cameraState % 6;
+                cameraState = (cameraState + 1) % Object.keys(CameraStates).length;
             }
 
             const tails = [chassisMesh.getObjectByName("bl"), chassisMesh.getObjectByName("br")];
@@ -256,30 +265,34 @@ class AmmoCar {
             // Updates the camera position
 
             switch (cameraState) {
-                case 0:
+                case CameraStates.THIRD_FOREWARD:
                     camera.position.set(0, 2, -10);
                     camera.rotation.set(0, Math.PI, 0);
                     break;
-                case 1:
+                case CameraStates.FIRST_FOREWARD:
                     camera.position.set(0, 0, 0);
                     camera.rotation.set(0, Math.PI, 0);
                     toggleHeadlightVisibility(false);
                     break;
-                case 2:
+                case CameraStates.FIRST_STERN:
                     camera.position.set(0, 0, 0);
                     camera.rotation.set(0, 0, 0);
                     toggleHeadlightVisibility(true);
                     break;
-                case 3:
+                case CameraStates.THIRD_STERN:
                     camera.position.set(0, 2, 10);
                     camera.rotation.set(0, 0, 0);
                     break;
-                case 4:
+                case CameraStates.THIRD_STARBOARD:
                     camera.position.set(10, 10, 0);
                     camera.lookAt(0, 0, 0);
                     break;
+                case CameraStates.THIRD_FREE:
+                    // Letting OrbitControl take over
+                    break;
                 default:
-                // Letting OrbitControl take over
+                    console.error(`unhandled camera state: ${cameraState}`);
+                    break;
             }
 
             chassisMesh.position.set(position.x(), position.y(), position.z());
