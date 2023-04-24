@@ -1,3 +1,11 @@
+const KeyStates = {
+    UP: 0,
+    UNLOCKED: 1,
+    JUST_PRESSED: 2,
+    REPEATING: 3,
+    LAST: 4,
+};
+
 class KeyState {
     #state = KeyStates.UP;
 
