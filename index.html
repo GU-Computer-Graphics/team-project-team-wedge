@@ -92,11 +92,9 @@ POSSIBLE TODO IDEAS:
 
         function assetLoader(url, config) {
             const texture = loader.load(url);
-
             texture.wrapS = config.wrapS;
             texture.wrapT = config.wrapS;
-            texture.repeat.set(config.repeat.U, 40);
-            texture.repeat.set(config.repeat.V, 40);
+            texture.repeat.set(config.repeat.U, config.repeat.V);
 
             return texture;
         }
@@ -156,13 +154,13 @@ POSSIBLE TODO IDEAS:
             container.appendChild(renderer.domElement);
 
             const terrainTexture = assetLoader(
-                "https://raw.githubusercontent.com/GU-Computer-Graphics/team-project-team-wedge/main/assets/grass.jpg",
+                "https://raw.githubusercontent.com/soitchu/assets/main/grass.jpg",
                 {
                     wrapS: THREE.MirroredRepeatWrapping,
                     wrapT: THREE.MirroredRepeatWrapping,
                     repeat: {
-                        U: 40,
-                        V: 40
+                        U: 400,
+                        V: 400
                     },
                 }
             );
@@ -214,8 +212,9 @@ POSSIBLE TODO IDEAS:
             });
 
             const terrainMaterial = new THREE.MeshPhongMaterial({
-                side: THREE.DoubleSide,
-                map: terrainTexture
+                // side: THREE.DoubleSide,
+                map: terrainTexture,
+                color: 0xffffff
             });
 
             scene.add(makeTerrain(terrainMaterial));

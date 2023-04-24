@@ -1,5 +1,5 @@
 let heightData;
-const maxTerrainHeight = 50;
+const maxTerrainHeight = 30;
 
 function createRigidObject(pos, quat, params, mass, friction, isBox = false, color = 0x919691) {
     let shape, geometry;
