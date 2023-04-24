@@ -255,24 +255,30 @@ class AmmoCar {
 
             // Updates the camera position
 
-            if (cameraState == 0) {
-                camera.position.set(0, 2, -10);
-                camera.rotation.set(0, Math.PI, 0);
-            } else if (cameraState == 1) {
-                camera.position.set(0, 0, 0);
-                camera.rotation.set(0, Math.PI, 0);
-                toggleHeadlightVisibility(false);
-            } else if (cameraState == 2) {
-                camera.position.set(0, 0, 0);
-                camera.rotation.set(0, 0, 0);
-                toggleHeadlightVisibility(true);
-            } else if (cameraState == 3) {
-                camera.position.set(0, 2, 10);
-                camera.rotation.set(0, 0, 0);
-            } else if (cameraState == 4) {
-                camera.position.set(10, 10, 0);
-                camera.lookAt(0, 0, 0);
-            } else {
+            switch (cameraState) {
+                case 0:
+                    camera.position.set(0, 2, -10);
+                    camera.rotation.set(0, Math.PI, 0);
+                    break;
+                case 1:
+                    camera.position.set(0, 0, 0);
+                    camera.rotation.set(0, Math.PI, 0);
+                    toggleHeadlightVisibility(false);
+                    break;
+                case 2:
+                    camera.position.set(0, 0, 0);
+                    camera.rotation.set(0, 0, 0);
+                    toggleHeadlightVisibility(true);
+                    break;
+                case 3:
+                    camera.position.set(0, 2, 10);
+                    camera.rotation.set(0, 0, 0);
+                    break;
+                case 4:
+                    camera.position.set(10, 10, 0);
+                    camera.lookAt(0, 0, 0);
+                    break;
+                default:
                 // Letting OrbitControl take over
             }
 
