@@ -98,13 +98,10 @@ POSSIBLE TODO IDEAS:
         const keyboard = new Keyboard();
         syncList.push(() => keyboard.advanceFrame());
 
-        var ambientLight = new THREE.AmbientLight(0x204040);
-        var dirLight = new THREE.DirectionalLight(0xffffff, 1);
-
         let cameraState = 0;
         let camera, scene, renderer;
         let carSpeed = 0.00;
-        let day = true;
+        let daytime = true;
 
         function assetLoader(url, config) {
             const texture = loader.load(url);
@@ -157,8 +154,6 @@ POSSIBLE TODO IDEAS:
             camera.position.y = 2;
             camera.position.z = -10;
             camera.rotation.y = Math.PI;
-
-            dirLight.position.set(10, 10, 5);
 
             renderer.setClearColor(0x87CEEB);
             renderer.setPixelRatio(window.devicePixelRatio);
@@ -234,8 +229,15 @@ POSSIBLE TODO IDEAS:
             makeTrack(roadMaterial, brickMaterial);
             addClouds(cloudTexture);
             new AmmoCar(syncList, physicsWorld, keyboard);
-            scene.add(ambientLight);
-            scene.add(dirLight);
+
+            const ambient = new THREE.AmbientLight(0x204040);
+            ambient.name = "ambient_lighting";
+            scene.add(ambient);
+
+            const directional = new THREE.DirectionalLight(0xFFFFFF);
+            directional.name = "directional_lighting";
+            directional.position.set(10, 10, 5);
+            scene.add(directional);
 
             update();
 
@@ -247,33 +249,13 @@ POSSIBLE TODO IDEAS:
             document.body.appendChild(stats.dom);
         }
 
-
-        // NEW : WIP
-        /*
-            FIXME: something is causing the dayState to flicker, independent of the actual state
-        */
-        document.addEventListener('keydown', (event) => {
-            console.log(event.key);
-            if ((event.key = 'n')) {
-                if (day) {   // swap to night
-                    day = false;
-                    //scene.remove(ambientLight);
-                    //scene.remove(dirLight);
-                    ambientLight = new THREE.AmbientLight(0xd1515);
-                    dirLight = new THREE.DirectionalLight(0x0d0d0d, 1);
-                    //scene.add(ambientLight);
-                    //scene.add(dirLight);
-                }
-                else { // swap to day
-                    day = true;
-                    //scene.remove(ambientLight);
-                    //scene.remove(dirLight);
-                    ambientLight = new THREE.AmbientLight(0x204040);
-                    dirLight = new THREE.DirectionalLight(0xffffff, 1);
-                    //scene.add(ambientLight);
-                    //scene.add(dirLight);
-                }
-                renderer.render(scene, camera);
+        syncList.push(() => {
+            if (keyboard.daynight.justPressed()) {
+                const ambient = scene.getObjectByName("ambient_lighting");
+                const directional = scene.getObjectByName("directional_lighting");
+                daytime = !daytime;
+                ambient.color.set(daytime ? 0x204040 : 0x0D1515);
+                directional.color.set(daytime ? 0xFFFFFF : 0x0D0D0D);
             }
         });
 
