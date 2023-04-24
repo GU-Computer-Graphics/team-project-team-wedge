@@ -27,6 +27,7 @@ class Keyboard {
             brake: "Space",
             camera: "KeyC",
             headlight: "KeyL",
+            daynight: "KeyN",
         };
 
         for (const [k, v] of Object.entries(keyCodes)) {

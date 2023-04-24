@@ -80,9 +80,13 @@ POSSIBLE TODO IDEAS:
         const stats = new Stats();
         const keyboard = new Keyboard();
 
+        var ambientLight = new THREE.AmbientLight(0x204040);
+        var dirLight = new THREE.DirectionalLight(0xffffff, 1);
+
         let cameraState = 0;
         let camera, scene, renderer;
         let carSpeed = 0.00;
+        let day = true;
 
         function assetLoader(url, config) {
             const texture = loader.load(url);
@@ -131,9 +135,6 @@ POSSIBLE TODO IDEAS:
             renderer = new THREE.WebGLRenderer();
 
             const controls = new THREE.OrbitControls(camera);
-            const ambientLight = new THREE.AmbientLight(0x204040);
-            const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-
 
             camera.position.y = 2;
             camera.position.z = -10;
@@ -228,7 +229,40 @@ POSSIBLE TODO IDEAS:
             document.body.appendChild(stats.dom);
         }
 
+
+        // NEW : WIP
+        /*
+            Headlights and taillights have no max range and are way too bright
+                makes the sim really buggy at night
+                defeats the point of lights
+        */
+        document.addEventListener('keydown', (event) => {
+            if((event.key = 'n')){
+                if(day) {   // swap to night
+                    day = false;
+                    scene.remove(ambientLight);
+                    scene.remove(dirLight);
+                    ambientLight = new THREE.AmbientLight(0xd1515);
+                    dirLight = new THREE.DirectionalLight(0x0d0d0d, 1);
+                    scene.add(ambientLight);
+                    scene.add(dirLight);
+                } 
+                else { // swap to day
+                    day = true;
+                    scene.remove(ambientLight);
+                    scene.remove(dirLight);
+                    ambientLight = new THREE.AmbientLight(0x204040);
+                    dirLight = new THREE.DirectionalLight(0xffffff, 1);
+                    scene.add(ambientLight);
+                    scene.add(dirLight);
+                }
+                renderer.render(scene, camera);
+            }
+        }, false);
+
         Ammo().then((Ammo) => init(Ammo));
+
+        
 
     </script>
 
