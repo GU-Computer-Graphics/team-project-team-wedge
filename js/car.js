@@ -296,7 +296,7 @@ class AmmoCar {
         );
 
         ammoGeom.calculateLocalInertia(800, localInertia);
-        
+
         const ammoCarBody = new Ammo.btRigidBody(
             new Ammo.btRigidBodyConstructionInfo(
                 800,
