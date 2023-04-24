@@ -56,6 +56,7 @@ class AmmoCar {
 
             const light = new THREE.SpotLight();
             light.name = "light";
+            light.distance = 100;
             light.intensity = 0;
             light.color = new THREE.Color(color);
             light.penumbra = 0.8;
