@@ -1,10 +1,10 @@
-const KeyStates = {
-    UP: 0,
-    UNLOCKED: 1,
-    JUST_PRESSED: 2,
-    REPEATING: 3,
-    LAST: 4,
-};
+const KeyStates = Object.fromEntries([
+    "UP",
+    "UNLOCKED",
+    "JUST_PRESSED",
+    "REPEATING",
+    "LAST",
+].map((x, i) => [x, i]));
 
 class KeyState {
     #state = KeyStates.UP;
