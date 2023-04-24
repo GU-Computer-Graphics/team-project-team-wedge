@@ -96,6 +96,7 @@ POSSIBLE TODO IDEAS:
         const clock = new THREE.Clock();
         const stats = new Stats();
         const keyboard = new Keyboard();
+        syncList.push(() => keyboard.advanceFrame());
 
         var ambientLight = new THREE.AmbientLight(0x204040);
         var dirLight = new THREE.DirectionalLight(0xffffff, 1);

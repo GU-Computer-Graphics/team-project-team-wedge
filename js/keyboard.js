@@ -60,11 +60,11 @@ class Keyboard {
                 state.reset();
             }
         });
+    }
 
-        syncList.push(() => {
-            for (const state of this.#mappings.values()) {
-                state.advance();
-            }
-        });
+    advanceFrame() {
+        for (const state of this.#mappings.values()) {
+            state.advance();
+        }
     }
 }
