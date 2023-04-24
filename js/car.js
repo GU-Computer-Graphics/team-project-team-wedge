@@ -43,10 +43,11 @@ class AmmoCar {
             mesh.name = "mesh";
             mesh.position.set(pos.roll * dimensions.width / 2.2, 0, pos.pitch * dimensions.depth / 2);
             mesh.position.x -= pos.roll * mesh.geometry.parameters.width / 2;
+            mesh.material.emissive = VehicleLights.OFF;
 
             const light = new THREE.SpotLight();
             light.name = "light";
-            light.visible = false;
+            light.intensity = 0;
             light.color = new THREE.Color(color);
             light.penumbra = 0.8;
             light.angle = Math.PI / 4;
@@ -60,6 +61,7 @@ class AmmoCar {
 
             const object = new THREE.Object3D();
             object.name = name;
+            object.userData = { active: false };
             object.add(mesh, light, light.target);
             return object;
         }
@@ -138,13 +140,15 @@ class AmmoCar {
                 const light = tail.getObjectByName("light");
                 const mesh = tail.getObjectByName("mesh");
                 if (keyboard.backward.isDown() || keyboard.brake.isDown()) {
-                    if (!light.visible) {
-                        light.visible = true;
+                    if (!tail.userData.active) {
+                        tail.userData.active = true;
+                        light.intensity = 1;
                         mesh.material.emissive = VehicleLights.REAR_ON;
                     }
                 } else {
-                    if (light.visible) {
-                        light.visible = false;
+                    if (tail.userData.active) {
+                        tail.userData.active = false;
+                        light.intensity = 0;
                         mesh.material.emissive = VehicleLights.OFF;
                     }
                 }
@@ -156,8 +160,14 @@ class AmmoCar {
                     const light = head.getObjectByName("light");
                     const mesh = head.getObjectByName("mesh");
 
-                    light.visible = !light.visible;
-                    mesh.material.emissive = light.visible ? VehicleLights.FRONT_ON : VehicleLights.OFF;
+                    head.userData.active = !head.userData.active;
+                    if (head.userData.active) {
+                        light.intensity = 1;
+                        mesh.material.emissive = VehicleLights.FRONT_ON;
+                    } else {
+                        light.intensity = 0;
+                        mesh.material.emissive = VehicleLights.OFF;
+                    }
                 }
             }
 
