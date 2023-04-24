@@ -140,11 +140,17 @@ class AmmoCar {
                 return;
             }
 
+            const heads = [chassisMesh.getObjectByName("fl"), chassisMesh.getObjectByName("fr")];
+            const tails = [chassisMesh.getObjectByName("bl"), chassisMesh.getObjectByName("br")];
+
             if (keyboard.camera.justPressed()) {
                 cameraState = (cameraState + 1) % Object.keys(CameraStates).length;
+                heads.map((x) => x.getObjectByName("mesh"))
+                    .forEach((x) => x.visible = cameraState != CameraStates.FIRST_FOREWARD);
+                tails.map((x) => x.getObjectByName("mesh"))
+                    .forEach((x) => x.visible = cameraState != CameraStates.FIRST_STERN);
             }
 
-            const tails = [chassisMesh.getObjectByName("bl"), chassisMesh.getObjectByName("br")];
             for (const tail of tails) {
                 const light = tail.getObjectByName("light");
                 const mesh = tail.getObjectByName("mesh");
@@ -164,7 +170,6 @@ class AmmoCar {
             }
 
             if (keyboard.headlight.justPressed()) {
-                const heads = [chassisMesh.getObjectByName("fl"), chassisMesh.getObjectByName("fr")];
                 for (const head of heads) {
                     const light = head.getObjectByName("light");
                     const mesh = head.getObjectByName("mesh");
@@ -251,17 +256,6 @@ class AmmoCar {
             pos.applyQuaternion(quaternion);
 
 
-            // Hides the front headlight
-
-            function toggleHeadlightVisibility(state) {
-                const heads = [chassisMesh.getObjectByName("fl"), chassisMesh.getObjectByName("fr")];
-                for (const head of heads) {
-                    const mesh = head.getObjectByName("mesh");
-                    mesh.visible = state;
-                }
-            }
-
-
             // Updates the camera position
 
             switch (cameraState) {
@@ -272,12 +266,10 @@ class AmmoCar {
                 case CameraStates.FIRST_FOREWARD:
                     camera.position.set(0, 0, 0);
                     camera.rotation.set(0, Math.PI, 0);
-                    toggleHeadlightVisibility(false);
                     break;
                 case CameraStates.FIRST_STERN:
                     camera.position.set(0, 0, 0);
                     camera.rotation.set(0, 0, 0);
-                    toggleHeadlightVisibility(true);
                     break;
                 case CameraStates.THIRD_STERN:
                     camera.position.set(0, 2, 10);
