@@ -37,18 +37,10 @@
 POSSIBLE TODO IDEAS:
 
     Forerunner ideas:
-        position car over track or lower track so car can drive on it
 
     Backburner ideas:
         Make clouds look better
-        create functional brakelights
-            add lights to car model
-            use eventlisteners to toggle light.visible when s keydown (until keyup) or space keydown (until keyup)
-        create toggle-able headlights
-            same process as above
-        make car prettier
-        FPS display counter (should be part of stats.js)
-        add props to track
+        add props to track / make track more interesting
 -->
 
 <body>
@@ -64,19 +56,14 @@ POSSIBLE TODO IDEAS:
     <script src="./js/scene.js"></script>
 
     <script>
+        const syncList = [];
+        const dynamicObjects = [];
+
         const VehicleLights = {
             OFF: new THREE.Color("black"),
             FRONT_ON: new THREE.Color("orange"),
             REAR_ON: new THREE.Color("brown"),
         };
-
-        const container = document.getElementById("container");
-        const ZERO_QUATERNION = new THREE.Quaternion(0, 0, 0, 1);
-        const loader = new THREE.TextureLoader();
-        const clock = new THREE.Clock();
-        const syncList = [];
-        const dynamicObjects = [];
-        const stats = new Stats();
 
         const KeyStates = {
             UP: 0,
@@ -85,7 +72,14 @@ POSSIBLE TODO IDEAS:
             REPEATING: 3,
             LAST: 4,
         };
+
+        const container = document.getElementById("container");
+        const ZERO_QUATERNION = new THREE.Quaternion(0, 0, 0, 1);
+        const loader = new THREE.TextureLoader();
+        const clock = new THREE.Clock();
+        const stats = new Stats();
         const keyboard = new Keyboard();
+
         let cameraState = 0;
         let camera, scene, renderer;
         let carSpeed = 0.00;
@@ -246,6 +240,7 @@ POSSIBLE TODO IDEAS:
         <li>L : headlights </li>
         <li>C : cycle camera angle </li>
         <li>SPACE : handbrake </li>
+        <li>N : toggle day/night (WIP)</li>
     </div>
 
     <div id="speedometer">

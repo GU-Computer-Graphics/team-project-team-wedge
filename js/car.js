@@ -184,10 +184,10 @@ class AmmoCar {
 
             if (keyboard.left.isDown()) {
                 vehicleSteering = Math.max(0, vehicleSteering);
-                vehicleSteering += 0.001;
+                vehicleSteering += 0.0075;
             } else if (keyboard.right.isDown()) {
                 vehicleSteering = Math.min(0, vehicleSteering);
-                vehicleSteering -= 0.001;
+                vehicleSteering -= 0.0075;
             } else {
                 vehicleSteering = 0;
             }
