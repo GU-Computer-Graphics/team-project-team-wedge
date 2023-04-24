@@ -8,27 +8,34 @@
     <style>
         body {
             margin: 0;
+            overflow: hidden;
+        }
+
+        canvas {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+
+        .ui-element {
+            color: white;
+            font-size: 1em;
+            text-shadow: black 0 0 2px;
         }
 
         #speedometer {
-            position: fixed;
-            right: 0;
-            bottom: 0;
-            padding: 40px;
-            background-color: gray;
-            text-align: center;
-            width: 8%;
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            text-align: right;
         }
 
         #controls {
-            position: fixed;
-            left: 0;
-            top: 0;
-            padding-top: 20px;
-            padding-bottom: 20px;
-            padding-left: 2px;
-            padding-right: 5px;
-            text-align: left;
+            list-style-type: none;
+            position: absolute;
+            right: 5px;
+            text-align: center;
+            top: 5px;
         }
 
     </style>
@@ -45,7 +52,24 @@ POSSIBLE TODO IDEAS:
 -->
 
 <body>
-    <div id="container"></div>
+    <div id="container">
+        <div class="ui-element">
+            <div id="controls">
+                <li>W : accelerate </li>
+                <li>S : decelerate / reverse</li>
+                <li>A : turn left </li>
+                <li>D : turn right </li>
+                <li>L : headlights </li>
+                <li>C : cycle camera angle </li>
+                <li>SPACE : handbrake </li>
+                <li>N : toggle day/night (WIP)</li>
+            </div>
+
+            <div id="speedometer">
+                <div id="speed">00.00</div> (kmph)
+            </div>
+        </div>
+    </div>
 
     <script src="./js/libs/ammo.js"></script>
     <script src="./js/libs/three.js"></script>
@@ -262,25 +286,9 @@ POSSIBLE TODO IDEAS:
 
         Ammo().then((Ammo) => init(Ammo));
 
-        
+
 
     </script>
-
-    <div id="controls">
-        <li>W : accelerate </li>
-        <li>S : decelerate / reverse</li>
-        <li>A : turn left </li>
-        <li>D : turn right </li>
-        <li>L : headlights </li>
-        <li>C : cycle camera angle </li>
-        <li>SPACE : handbrake </li>
-        <li>N : toggle day/night (WIP)</li>
-    </div>
-
-    <div id="speedometer">
-        <p id="speed">00.00</p>
-        <p>kmph</p>
-    </div>
 
 </body>
 
