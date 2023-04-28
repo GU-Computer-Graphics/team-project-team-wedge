@@ -62,7 +62,7 @@ POSSIBLE TODO IDEAS:
                 <li>L : headlights </li>
                 <li>C : cycle camera angle </li>
                 <li>SPACE : handbrake </li>
-                <li>N : toggle day/night (WIP)</li>
+                <li>N : toggle day/night</li>
             </div>
 
             <div id="speedometer">
@@ -155,7 +155,7 @@ POSSIBLE TODO IDEAS:
             camera.position.z = -10;
             camera.rotation.y = Math.PI;
 
-            renderer.setClearColor(0x87CEEB);
+            renderer.setClearColor("skyblue");
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.render(scene, camera);
@@ -256,6 +256,7 @@ POSSIBLE TODO IDEAS:
                 daytime = !daytime;
                 ambient.color.set(daytime ? 0x204040 : 0x0D1515);
                 directional.color.set(daytime ? 0xFFFFFF : 0x0D0D0D);
+                renderer.setClearColor(daytime ? "skyblue" : "midnightblue");
             }
         });
 
