@@ -107,7 +107,6 @@
     <script>
         const syncList = [];
         const dynamicObjects = [];
-
         const VehicleLights = {
             OFF: new THREE.Color("black"),
             FRONT_ON: new THREE.Color("orange"),
@@ -130,6 +129,7 @@
         let daytime = true;
         let controlsHidden = false;
         let light, car;
+        let cloudList = [];
 
         function assetLoader(url, config) {
             const texture = loader.load(url);
@@ -256,7 +256,7 @@
 
             scene.add(makeTerrain(terrainMaterial));
             makeTrack(roadMaterial, brickMaterial);
-            addClouds(cloudTexture);
+            cloudList = addClouds(cloudTexture);
             car = new AmmoCar(syncList, physicsWorld, keyboard);
 
             const ambient = new THREE.AmbientLight(0x0f0f0f);
@@ -299,6 +299,20 @@
             if (keyboard.hide.justPressed()) {
                 UIElems.style.display = controlsHidden ? "block" : "none";
                 controlsHidden = !controlsHidden;
+            }
+
+            for(const cloud of cloudList){
+                cloud.u += 0.0003;
+
+                const radius = cloud.radius;
+                const v = cloud.v;
+                const u = cloud.u;
+
+                cloud.mesh.position.set(
+                    radius * Math.sin(u) * Math.cos(v),
+                    radius * Math.sin(u) * Math.sin(v),
+                    radius * Math.cos(u)
+                );
             }
         });
 
