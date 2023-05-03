@@ -36,6 +36,7 @@ class Keyboard {
             camera: "KeyC",
             headlight: "KeyL",
             daynight: "KeyN",
+            hide: "KeyH",
         };
 
         for (const [k, v] of Object.entries(keyCodes)) {

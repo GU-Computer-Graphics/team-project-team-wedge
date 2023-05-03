@@ -6,6 +6,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans&display=swap');
+
+        div {
+            font-family: 'DM Sans', sans-serif;
+        }
+
         body {
             margin: 0;
             overflow: hidden;
@@ -20,7 +26,6 @@
         .ui-element {
             color: white;
             font-size: 1em;
-            text-shadow: black 0 0 2px;
         }
 
         #speedometer {
@@ -33,11 +38,36 @@
         #controls {
             list-style-type: none;
             position: absolute;
-            right: 5px;
-            text-align: center;
-            top: 5px;
-            padding: 2px;
-            background-color: dimgray;
+            right: 0px;
+            text-align: left;
+            top: 0px;
+            padding: 10px;
+            background-color: white;
+            color: black;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #loading {
+            background-color: white;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hide {
+            background-color: black;
+            color: white;
+            margin-top: 10px;
+            padding: 5px;
+            border-radius: 3px;
         }
     </style>
 </head>
@@ -45,7 +75,8 @@
 
 <body>
     <div id="container">
-        <div class="ui-element">
+        <div id="loading" class="screen">Loading...</div>
+        <div class="ui-element" id="UIelems">
             <div id="controls">
                 <li>W : accelerate </li>
                 <li>S : decelerate / reverse</li>
@@ -55,11 +86,12 @@
                 <li>C : cycle camera angle </li>
                 <li>SPACE : handbrake </li>
                 <li>N : toggle day/night</li>
+                <li class="hide">H : Hide/show controls</li>
             </div>
+        </div>
 
-            <div id="speedometer">
-                <div id="speed">00.00</div> (kmph)
-            </div>
+        <div id="speedometer">
+            <div id="speed">00.00</div> (kmph)
         </div>
     </div>
 
@@ -83,6 +115,8 @@
         };
 
         const container = document.getElementById("container");
+        const UIElems = document.getElementById("UIelems");
+        const loading = document.getElementById("loading");
         const ZERO_QUATERNION = new THREE.Quaternion(0, 0, 0, 1);
         const loader = new THREE.TextureLoader();
         const clock = new THREE.Clock();
@@ -94,6 +128,7 @@
         let camera, scene, renderer;
         let carSpeed = 0.00;
         let daytime = true;
+        let controlsHidden = false;
         let light, car;
 
         function assetLoader(url, config) {
@@ -248,6 +283,7 @@
 
             stats.showPanel(1);
             document.body.appendChild(stats.dom);
+            loading.style.display = "none";
         }
 
         syncList.push(() => {
@@ -259,7 +295,13 @@
                 spotlight.color.set(daytime ? 0xFFFFFF : 0x0D0D0D);
                 renderer.setClearColor(daytime ? "skyblue" : 0x000000);
             }
+
+            if (keyboard.hide.justPressed()) {
+                UIElems.style.display = controlsHidden ? "block" : "none";
+                controlsHidden = !controlsHidden;
+            }
         });
+
 
         Ammo().then((Ammo) => init(Ammo));
 
