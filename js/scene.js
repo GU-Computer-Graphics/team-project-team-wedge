@@ -62,9 +62,10 @@ function createRigidObject(pos, quat, params, mass, friction, isBox = false, col
 }
 
 function makeTrack(material, brickMaterial) {
-    createRigidObject(new THREE.Vector3(0, 0, 0), ZERO_QUATERNION, { height: 20, radius: 25, material: [new THREE.MeshPhongMaterial({ color: 0xfca400 }), material, new THREE.MeshPhongMaterial({ color: 0xfca400 })] }, 0, 2);
+    const yOffset = 10;
+    createRigidObject(new THREE.Vector3(0, yOffset + 0, 0), ZERO_QUATERNION, { height: 20, radius: 25, material: [new THREE.MeshPhongMaterial({ color: 0xfca400 }), material, new THREE.MeshPhongMaterial({ color: 0xfca400 })] }, 0, 2);
     createRigidObject(
-        new THREE.Vector3(0, 0, 20),
+        new THREE.Vector3(0, yOffset + 0, 20),
         ZERO_QUATERNION,
         {
             height: 40,
@@ -83,7 +84,7 @@ function makeTrack(material, brickMaterial) {
 
 
     createRigidObject(
-        new THREE.Vector3(0, 0, 40),
+        new THREE.Vector3(0, yOffset + 0, 40),
         ZERO_QUATERNION,
         {
             height: 20,
@@ -97,7 +98,7 @@ function makeTrack(material, brickMaterial) {
 
 
     createRigidObject(
-        new THREE.Vector3(0, 10, 0),
+        new THREE.Vector3(0, yOffset + 10, 0),
         ZERO_QUATERNION,
         {
             height: 10,
@@ -110,7 +111,7 @@ function makeTrack(material, brickMaterial) {
         }, 0, 2, false, 0xff0000);
 
     createRigidObject(
-        new THREE.Vector3(0, 10, 20),
+        new THREE.Vector3(0, yOffset + 10, 20),
         ZERO_QUATERNION,
         {
             height: 40,
@@ -125,7 +126,7 @@ function makeTrack(material, brickMaterial) {
         }, 0, 2, true, 0xff0000);
 
     createRigidObject(
-        new THREE.Vector3(0, 10, 40),
+        new THREE.Vector3(0, yOffset + 10, 40),
         ZERO_QUATERNION,
         {
             height: 10,
@@ -175,7 +176,7 @@ function createTree(sizeParams, position) {
     const trunkMaterial = new THREE.MeshPhongMaterial({ color: 0x964B00 });
     const trunkMesh = new THREE.Mesh(trunkGeometry, trunkMaterial);
     const geometry = new THREE.CylinderGeometry(0, sizeParams.radius * 4, 20, sizeParams.segments);
-    const material = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+    const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, shininess: 0 });
     const treeTop = new THREE.Mesh(geometry, material);
 
     position.x = position.x;

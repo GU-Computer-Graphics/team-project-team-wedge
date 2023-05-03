@@ -240,7 +240,7 @@
             scene.add(spotlight);
             update();
 
-            scene.fog = new THREE.Fog( 0xcccccc, 0, 400 );
+            scene.fog = new THREE.Fog(0xcccccc, 0, 400);
 
             window.setInterval(function () {
                 document.getElementById("speed").innerHTML = carSpeed;
@@ -253,11 +253,11 @@
         syncList.push(() => {
             if (keyboard.daynight.justPressed()) {
                 const ambient = scene.getObjectByName("ambient_lighting");
-                const spotlight= scene.getObjectByName("spotlight_lighting");
+                const spotlight = scene.getObjectByName("spotlight_lighting");
                 daytime = !daytime;
                 ambient.color.set(daytime ? 0x204040 : 0x0D1515);
-                directional.color.set(daytime ? 0xFFFFFF : 0x0D0D0D);
-                renderer.setClearColor(daytime ? "skyblue" : "midnightblue");
+                spotlight.color.set(daytime ? 0xFFFFFF : 0x0D0D0D);
+                renderer.setClearColor(daytime ? "skyblue" : 0x000000);
             }
         });
 
