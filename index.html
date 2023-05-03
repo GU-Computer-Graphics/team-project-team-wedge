@@ -39,7 +39,6 @@
             padding: 2px;
             background-color: dimgray;
         }
-
     </style>
 </head>
 
@@ -95,6 +94,7 @@
         let camera, scene, renderer;
         let carSpeed = 0.00;
         let daytime = true;
+        let light, car;
 
         function assetLoader(url, config) {
             const texture = loader.load(url);
@@ -140,7 +140,8 @@
                 2000
             );
             scene = new THREE.Scene();
-            renderer = new THREE.WebGLRenderer();
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.shadowMap.enabled = true;
 
             const controls = new THREE.OrbitControls(camera);
 
@@ -221,18 +222,25 @@
             scene.add(makeTerrain(terrainMaterial));
             makeTrack(roadMaterial, brickMaterial);
             addClouds(cloudTexture);
-            new AmmoCar(syncList, physicsWorld, keyboard);
+            car = new AmmoCar(syncList, physicsWorld, keyboard);
 
-            const ambient = new THREE.AmbientLight(0x204040);
+            const ambient = new THREE.AmbientLight(0x0f0f0f);
             ambient.name = "ambient_lighting";
             scene.add(ambient);
 
-            const directional = new THREE.DirectionalLight(0xFFFFFF);
-            directional.name = "directional_lighting";
-            directional.position.set(10, 10, 5);
-            scene.add(directional);
+            const spotlight = new THREE.SpotLight(0xFFFFFF, 1, 0, Math.PI / 3, 1);
+            spotlight.name = "spotlight_lighting";
+            spotlight.position.set(10, 100, 5);
 
+            // directional.shadow.mapSize.width = 2048;
+            // directional.shadow.mapSize.height = 2048;
+            // directional.shadow.camera.near = 10;
+            // directional.shadow.camera.far = 30;
+
+            scene.add(spotlight);
             update();
+
+            scene.fog = new THREE.Fog( 0xcccccc, 0, 400 );
 
             window.setInterval(function () {
                 document.getElementById("speed").innerHTML = carSpeed;
@@ -245,7 +253,7 @@
         syncList.push(() => {
             if (keyboard.daynight.justPressed()) {
                 const ambient = scene.getObjectByName("ambient_lighting");
-                const directional = scene.getObjectByName("directional_lighting");
+                const spotlight= scene.getObjectByName("spotlight_lighting");
                 daytime = !daytime;
                 ambient.color.set(daytime ? 0x204040 : 0x0D1515);
                 directional.color.set(daytime ? 0xFFFFFF : 0x0D0D0D);

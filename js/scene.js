@@ -274,7 +274,6 @@ function makeTerrain(material) {
     terrainMesh = new THREE.Mesh(geometry, material);
     terrainMesh.position.set(0, 0, 0);
 
-
     for (let i = 0; i < 300; i++) {
         const radius = 75 + Math.floor(Math.random() * 425);
         const theta = 0 + Math.random() * Math.PI * 2;
@@ -302,10 +301,12 @@ function addClouds(cloudTexture) {
     const cloudObject = new THREE.Object3D();
     const cloudMaterial = new THREE.MeshBasicMaterial({
         color: 0xffffff,
+        transparent: true,
+        opacity: 0.6
     });
 
     // Sphere parametric equation: [sin(u)*cos(v), sin(u)*sin(v), cos(u)]
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 100; i++) {
         // Making sure the clouds don't clip
         const radius = 200 + 300 * Math.random();
         const u = Math.PI * Math.random();
@@ -315,10 +316,11 @@ function addClouds(cloudTexture) {
         plane.position.y = radius * Math.sin(u) * Math.sin(v);
         plane.position.z = radius * Math.cos(u);
         plane.rotation.x = Math.PI / 2;
+        plane.castShadow = true;
 
         plane.lookAt(0, 0, 0);
         plane.scale.x = plane.scale.y = Math.random() * Math.random() + 0.3;
-        plane.renderOrder= i ;
+        plane.renderOrder = i;
         cloudObject.add(plane);
 
     }
