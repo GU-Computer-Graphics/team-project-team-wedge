@@ -300,14 +300,15 @@ function makeTerrain(material) {
 
 function addClouds(cloudTexture) {
     const cloudObject = new THREE.Object3D();
-    const cloudMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffffff,
+    const cloudMaterial = new THREE.MeshPhongMaterial({
         transparent: true,
-        opacity: 0.6
+        opacity: 0.7,
+        map: cloudTexture,
+        depthWrite: false,
     });
 
     // Sphere parametric equation: [sin(u)*cos(v), sin(u)*sin(v), cos(u)]
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 300; i++) {
         // Making sure the clouds don't clip
         const radius = 200 + 300 * Math.random();
         const u = Math.PI * Math.random();

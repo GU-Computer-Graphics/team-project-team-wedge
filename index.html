@@ -140,7 +140,7 @@
                 2000
             );
             scene = new THREE.Scene();
-            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, premultipliedAlpha: false });
             renderer.shadowMap.enabled = true;
 
             const controls = new THREE.OrbitControls(camera);
@@ -197,8 +197,8 @@
                     wrapS: THREE.RepeatWrapping,
                     wrapT: THREE.RepeatWrapping,
                     repeat: {
-                        U: 0,
-                        V: 0
+                        U: 1,
+                        V: 1
                     },
                 }
             )
