@@ -22,6 +22,7 @@ function createRigidObject(pos, quat, params, mass, friction, isBox = false, col
         const mesh = new THREE.Mesh(shape, params.material ? params.material : new THREE.MeshPhongMaterial({ color }));
         mesh.position.copy(pos);
         mesh.quaternion.copy(quat);
+        console.log(mesh);
         scene.add(mesh);
     }
 
@@ -137,6 +138,26 @@ function makeTrack(material, brickMaterial) {
             //     brickMaterial
             // ]
         }, 0, 2, false, 0xff0000);
+
+    const quaternion = new THREE.Quaternion(0, 0, 0, 1);
+    quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 8);
+    createRigidObject(
+        new THREE.Vector3(0, yOffset - 11.5, -36.6),
+        quaternion,
+        {
+            height: 40,
+            width: 20,
+            length: 30,
+            material: [
+                new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+                new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+                material,
+                new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+                new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+                new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+                new THREE.MeshPhongMaterial({ color: 0xfca400 }),
+            ]
+        }, 0, 2, true);
 }
 
 function generateHeight(width, depth, minHeight, maxHeight) {
